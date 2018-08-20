@@ -7,8 +7,8 @@ int main()
     App app;
     Renderer renderer;
 
-    renderer.CreateInstance(true);
     app.CreateWindow(800, 600);
+    renderer.Initialize(app.GetWindow(), Renderer::ENABLE_VALIDATION);
     app.Run();
 
     return 0;

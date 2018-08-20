@@ -8,20 +8,75 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <vector>
+
 class Renderer
 {
 public:
-    void CreateInstance(bool enableValidationLayers);
+    enum ValidationState {
+        DISABLE_VALIDATION,
+        ENABLE_VALIDATION
+    };
+
+    void Initialize(GLFWwindow *window, Renderer::ValidationState validation);
 
 protected:
-    void setupDebugCallback();
+    GLFWwindow *m_window;
 
-
-protected:
     VkInstance m_instance;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkDevice m_device;
+    VkSurfaceKHR m_surface;
+
+    VkQueue m_graphicsQueue;
+    VkQueue m_presentQueue;
+
+    VkSwapchainKHR m_swapChain;
+    std::vector<VkImage> m_swapChainImages;
+    VkFormat m_swapChainImageFormat;
+    VkExtent2D m_swapChainExtent;
+    std::vector<VkImageView> m_swapChainImageViews;
+    std::vector<VkFramebuffer> m_swapChainFramebuffers;
+
+    bool m_enableValidationLayers;
     VkDebugUtilsMessengerEXT m_callback;
+
+protected:
+    void createInstance();
+    void setupDebugCallback();
+    void setSurfaceFromWindow(GLFWwindow *window);
+
+    struct QueueFamilyIndices
+    {
+        int graphicsFamily = -1;
+        int presentFamily = -1;
+
+        bool isComplete()
+        {
+            return graphicsFamily >= 0 && presentFamily >= 0;
+        }
+    };
+
+    struct SwapChainSupportDetails
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+    bool isDeviceSuitable(VkPhysicalDevice device);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    void pickPhysicalDevice();
+    void createLogicalDevice();
+
+    void createSwapChain();
+
+    void createImageViews();
+
+    int getMaxFramesInFlight();
+
+    VkImageView createImageView(VkImage image, VkFormat format);
 };
 
 

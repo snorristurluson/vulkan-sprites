@@ -14,6 +14,7 @@ public:
     App();
 
     void CreateWindow(int width, int height);
+    GLFWwindow* GetWindow();
 
     void Run();
 

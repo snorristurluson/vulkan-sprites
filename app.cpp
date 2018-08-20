@@ -29,3 +29,8 @@ void App::Run()
         glfwPollEvents();
     }
 }
+
+GLFWwindow *App::GetWindow()
+{
+    return m_window;
+}
