@@ -17,4 +17,4 @@ link_directories(${VULKAN_DIR}/lib)
 link_libraries(vulkan)
 link_libraries(MoltenVK)
 
-add_executable(vulkan-sprites main.cpp app.cpp app.h)
+add_executable(vulkan-sprites main.cpp app.cpp app.h Renderer.cpp Renderer.h)
