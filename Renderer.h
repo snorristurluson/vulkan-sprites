@@ -11,11 +11,9 @@
 class Renderer
 {
 public:
-    Renderer();
+    void CreateInstance(bool enableValidationLayers);
 
-    bool checkValidationLayerSupport();
-
-    void createInstance(bool enableValidationLayers);
+protected:
     void setupDebugCallback();
 
 

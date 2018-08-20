@@ -7,7 +7,7 @@ int main()
     App app;
     Renderer renderer;
 
-    renderer.createInstance(true);
+    renderer.CreateInstance(true);
     app.CreateWindow(800, 600);
     app.Run();
 
