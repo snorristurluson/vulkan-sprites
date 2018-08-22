@@ -41,6 +41,11 @@ protected:
     bool m_enableValidationLayers;
     VkDebugUtilsMessengerEXT m_callback;
 
+    VkRenderPass m_renderPass;
+
+    VkDescriptorSetLayout m_perFrameDescriptorSetLayout;
+    VkDescriptorSetLayout m_perObjectDescriptorSetLayout;
+
 protected:
     void createInstance();
     void setupDebugCallback();
@@ -77,6 +82,10 @@ protected:
     int getMaxFramesInFlight();
 
     VkImageView createImageView(VkImage image, VkFormat format);
+
+    void createRenderPass();
+
+    void createDescriptorSetLayouts();
 };
 
 

@@ -1,3 +1,7 @@
+# Vulkan sprite rendering engine
+This is my first attempt at doing something with Vulkan, and is based on the Vulkan
+tutorial found at https://vulkan-tutorial.com/
+
 ## Dependencies
 
 ### GLFW

@@ -3,7 +3,6 @@ project(vulkan-sprites)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(VULKAN_DIR ~/vulkansdk-macos-1.1.82.0/macOS)
 set(STB_DIR ~/stb)
 
 include_directories(/usr/local/include)
@@ -12,10 +11,11 @@ link_libraries(glfw)
 
 include_directories(${STB_DIR})
 
-include_directories(${VULKAN_DIR}/include)
-link_directories(${VULKAN_DIR}/lib)
 link_libraries(vulkan)
 if(APPLE)
+    set(VULKAN_DIR ~/vulkansdk-macos-1.1.82.0/macOS)
+    include_directories(${VULKAN_DIR}/include)
+    link_directories(${VULKAN_DIR}/lib)
     link_libraries(MoltenVK)
 endif(APPLE)
 
