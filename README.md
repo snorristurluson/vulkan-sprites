@@ -1,6 +1,7 @@
 # Vulkan sprite rendering engine
 This is my first attempt at doing something with Vulkan, and is based on the Vulkan
-tutorial found at https://vulkan-tutorial.com/
+tutorial found at 
+https://vulkan-tutorial.com/
 
 ## Dependencies
 
@@ -8,6 +9,12 @@ tutorial found at https://vulkan-tutorial.com/
 On macOS:
 ```bash
 brew install glfw --HEAD
+```
+
+### glm
+On Linux:
+```bash
+sudo apt install libglm-dev
 ```
  
 ### Vulkan
