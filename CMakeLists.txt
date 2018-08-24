@@ -19,4 +19,4 @@ if(APPLE)
     link_libraries(MoltenVK)
 endif(APPLE)
 
-add_executable(vulkan-sprites main.cpp app.cpp app.h Renderer.cpp Renderer.h)
+add_executable(vulkan-sprites main.cpp app.cpp app.h Renderer.cpp Renderer.h Vertex.cpp Vertex.h)

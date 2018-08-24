@@ -46,6 +46,13 @@ protected:
     VkDescriptorSetLayout m_perFrameDescriptorSetLayout;
     VkDescriptorSetLayout m_perObjectDescriptorSetLayout;
 
+    VkPipelineLayout m_pipelineLayout;
+    VkPipeline m_graphicsPipeline;
+
+    VkCommandPool m_commandPool;
+    std::vector<VkCommandPool> m_perFrameCommandPool;
+    std::vector<std::vector<VkCommandBuffer>> m_perFrameCommandBuffer;
+
 protected:
     void createInstance();
     void setupDebugCallback();
@@ -86,6 +93,14 @@ protected:
     void createRenderPass();
 
     void createDescriptorSetLayouts();
+
+    void createGraphicsPipeline();
+
+    VkShaderModule createShaderModule(const std::vector<char> &vector);
+
+    void createFramebuffers();
+
+    void createCommandPool();
 };
 
 
