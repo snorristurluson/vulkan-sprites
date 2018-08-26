@@ -10,6 +10,7 @@
 #include <set>
 #include <cstring>
 #include "Vertex.h"
+#include "ShaderLib.h"
 
 namespace
 {
@@ -167,26 +168,6 @@ namespace
             return actualExtent;
         }
     }
-
-    std::vector<char> readFile(const std::string &filename)
-    {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            throw std::runtime_error("failed to open file!");
-        }
-
-        size_t fileSize = (size_t) file.tellg();
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
-
 }
 
 void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validation)
@@ -588,11 +569,8 @@ void Renderer::createDescriptorSetLayouts()
 
 void Renderer::createGraphicsPipeline()
 {
-    auto vertShaderCode = readFile("shaders/shader.vert.spv");
-    auto fragShaderCode = readFile("shaders/shader.frag.spv");
-
-    VkShaderModule vertShaderModule = createShaderModule(reinterpret_cast<uint8_t*>(vertShaderCode.data()), vertShaderCode.size());
-    VkShaderModule fragShaderModule = createShaderModule(reinterpret_cast<uint8_t*>(fragShaderCode.data()), fragShaderCode.size());
+    VkShaderModule vertShaderModule = createShaderModule(ShaderLib::GetVertexShader(), ShaderLib::GetVertexShaderSize());
+    VkShaderModule fragShaderModule = createShaderModule(ShaderLib::GetPixelShader(), ShaderLib::GetPixelShaderSize());
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

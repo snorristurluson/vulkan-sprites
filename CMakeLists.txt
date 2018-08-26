@@ -49,9 +49,24 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
         ${CMAKE_BINARY_DIR}/googletest-build
         EXCLUDE_FROM_ALL)
 
-add_executable(vulkan-sprites main.cpp app.cpp app.h Renderer.cpp Renderer.h Vertex.cpp Vertex.h Texture.cpp Texture.h stb_image.h ShaderLib.cpp ShaderLib.h)
+add_executable(
+        vulkan-sprites
+        main.cpp
+        app.cpp app.h
+        Renderer.cpp Renderer.h
+        Vertex.cpp Vertex.h
+        Texture.cpp Texture.h
+        stb_image.h
+        ShaderLib.cpp ShaderLib.h
+)
 
-add_executable(Renderer_test Renderer_test.cpp Renderer.cpp Renderer.h)
+add_executable(
+        Renderer_test
+        Renderer_test.cpp
+        Renderer.cpp Renderer.h
+        ShaderLib.cpp ShaderLib.h
+)
+
 target_link_libraries(Renderer_test gtest_main)
 
 # Shaders
