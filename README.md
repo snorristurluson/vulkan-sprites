@@ -8,6 +8,9 @@ https://vulkan-tutorial.com/
 ### Vulkan
 https://vulkan.lunarg.com/
 
+Install according to the instructions per platform and adjust the CMakeLists.txt file
+accordingly.
+
 ### GLFW
 On macOS:
 ```bash
@@ -28,4 +31,5 @@ sudo apt install libglm-dev
 VK_LAYER_PATH=~/vulkansdk-macos-1.1.82.0/macOS/etc/vulkan/explicit_layer.d
 VK_ICD_FILENAMES=~/vulkansdk-macos-1.1.82.0/macOS/etc/vulkan/icd.d/MoltenVK_icd.json
 ```
+Remember to do this for any target you want to run, including tests.
  
