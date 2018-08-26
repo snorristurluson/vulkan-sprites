@@ -5,6 +5,9 @@ https://vulkan-tutorial.com/
 
 ## Dependencies
 
+### Vulkan
+https://vulkan.lunarg.com/
+
 ### GLFW
 On macOS:
 ```bash
@@ -16,10 +19,10 @@ On Linux:
 ```bash
 sudo apt install libglm-dev
 ```
- 
-### Vulkan
-https://vulkan.lunarg.com/
 
+### stb_image
+
+ 
 ## Running on Mac
 ```bash
 VK_LAYER_PATH=~/vulkansdk-macos-1.1.82.0/macOS/etc/vulkan/explicit_layer.d

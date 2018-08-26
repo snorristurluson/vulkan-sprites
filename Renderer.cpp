@@ -591,8 +591,8 @@ void Renderer::createGraphicsPipeline()
     auto vertShaderCode = readFile("shaders/shader.vert.spv");
     auto fragShaderCode = readFile("shaders/shader.frag.spv");
 
-    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+    VkShaderModule vertShaderModule = createShaderModule(reinterpret_cast<uint8_t*>(vertShaderCode.data()), vertShaderCode.size());
+    VkShaderModule fragShaderModule = createShaderModule(reinterpret_cast<uint8_t*>(fragShaderCode.data()), fragShaderCode.size());
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -709,12 +709,12 @@ void Renderer::createGraphicsPipeline()
     vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
 }
 
-VkShaderModule Renderer::createShaderModule(const std::vector<char> &code)
+VkShaderModule Renderer::createShaderModule(uint8_t* code, size_t codeSize)
 {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
+    createInfo.codeSize = codeSize;
+    createInfo.pCode = reinterpret_cast<const uint32_t *>(code);
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {

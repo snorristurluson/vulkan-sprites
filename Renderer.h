@@ -96,7 +96,7 @@ protected:
 
     void createGraphicsPipeline();
 
-    VkShaderModule createShaderModule(const std::vector<char> &vector);
+    VkShaderModule createShaderModule(uint8_t* code, size_t codeSize);
 
     void createFramebuffers();
 
