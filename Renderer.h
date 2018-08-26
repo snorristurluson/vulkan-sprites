@@ -18,10 +18,14 @@ public:
         ENABLE_VALIDATION
     };
 
+    bool IsInitialized();
+
     void Initialize(GLFWwindow *window, Renderer::ValidationState validation);
 
 protected:
     GLFWwindow *m_window;
+
+    bool m_isInitialized = false;
 
     VkInstance m_instance;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;

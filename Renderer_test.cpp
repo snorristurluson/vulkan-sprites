@@ -28,7 +28,26 @@ TEST_F(RendererTest, CanCreate) {
     Renderer r;
 }
 
-TEST_F(RendererTest, Initialize_NoValidation) {
+TEST_F(RendererTest, FreshInstanceIsUninitialized) {
+    Renderer r;
+    EXPECT_FALSE(r.IsInitialized());
+}
+
+TEST_F(RendererTest, Initialize_DisableValidation) {
     Renderer r;
     r.Initialize(m_window, Renderer::DISABLE_VALIDATION);
+    EXPECT_TRUE(r.IsInitialized());
 }
+
+TEST_F(RendererTest, Initialize_EnableValidation) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    EXPECT_TRUE(r.IsInitialized());
+}
+
+TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    ASSERT_THROW(r.Initialize(m_window, Renderer::ENABLE_VALIDATION), std::runtime_error);
+}
+

@@ -170,9 +170,14 @@ namespace
     }
 }
 
+bool Renderer::IsInitialized() { return m_isInitialized; }
+
 void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validation)
 {
-    // TODO: guard against multiple calls
+    if(m_isInitialized) {
+        throw std::runtime_error("renderer is already initialized");
+    }
+
     m_window = window;
     m_enableValidationLayers = validation == ENABLE_VALIDATION;
 
@@ -192,6 +197,8 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
+
+    m_isInitialized = true;
 }
 
 void Renderer::createInstance()
@@ -748,4 +755,3 @@ void Renderer::createCommandPool()
         }
     }
 }
-
