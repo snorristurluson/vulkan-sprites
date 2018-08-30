@@ -64,6 +64,7 @@ add_executable(
         Renderer_test
         Renderer_test.cpp
         Renderer.cpp Renderer.h
+        Texture.cpp Texture.h
         ShaderLib.cpp ShaderLib.h
 )
 

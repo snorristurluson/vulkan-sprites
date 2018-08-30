@@ -9,7 +9,9 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <memory>
 
+class Texture;
 class Renderer
 {
 public:
@@ -18,9 +20,38 @@ public:
         ENABLE_VALIDATION
     };
 
+    struct BoundBuffer {
+        VkBuffer buffer;
+        VkDeviceMemory bufferMemory;
+    };
+
+    struct BoundImage {
+        VkImage image;
+        VkDeviceMemory imageMemory;
+    };
+
     bool IsInitialized();
 
     void Initialize(GLFWwindow *window, Renderer::ValidationState validation);
+
+    std::shared_ptr<Texture> CreateTexture(const std::string &filename);
+
+    BoundBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+    BoundImage CreateImage(
+            uint32_t width, uint32_t height,
+            VkFormat format, VkImageTiling tiling,
+            VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+
+    void CopyToBufferMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size);
+    void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    void DestroyBuffer(BoundBuffer buffer);
+
+    VkImageView CreateImageView(VkImage image, VkFormat format);
+
+    VkSampler CreateSampler();
 
 protected:
     GLFWwindow *m_window;
@@ -57,6 +88,12 @@ protected:
     std::vector<VkCommandPool> m_perFrameCommandPool;
     std::vector<std::vector<VkCommandBuffer>> m_perFrameCommandBuffer;
 
+    VkDescriptorPool m_descriptorPool;
+    std::vector<VkDescriptorSet> m_perFrameDescriptorSets;
+    std::vector<VkDescriptorSet> m_perObjectDescriptorSets;
+
+    std::vector<BoundBuffer> m_uniformBuffers;
+
 protected:
     void createInstance();
     void setupDebugCallback();
@@ -90,7 +127,7 @@ protected:
 
     void createImageViews();
 
-    int getMaxFramesInFlight();
+    size_t getMaxFramesInFlight();
 
     VkImageView createImageView(VkImage image, VkFormat format);
 
@@ -105,6 +142,18 @@ protected:
     void createFramebuffers();
 
     void createCommandPool();
+
+    uint32_t findMemoryType(uint32_t bits, VkMemoryPropertyFlags properties);
+
+    VkCommandBuffer beginSingleTimeCommands();
+
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+    void createDescriptorPool();
+
+    void createUniformBuffers();
+
+    void createPerFrameDescriptorSets();
 };
 
 

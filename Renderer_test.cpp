@@ -7,7 +7,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "Renderer.h"
-
+#include "Texture.h"
 
 class RendererTest : public ::testing::Test {
 protected:
@@ -51,3 +51,11 @@ TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
     ASSERT_THROW(r.Initialize(m_window, Renderer::ENABLE_VALIDATION), std::runtime_error);
 }
 
+TEST_F(RendererTest, CreateTexture) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    auto t = r.CreateTexture("resources/texture.jpg");
+    ASSERT_NE(t.get(), nullptr);
+    EXPECT_EQ(t->GetWidth(), 512);
+    EXPECT_EQ(t->GetHeight(), 512);
+}

@@ -8,19 +8,22 @@
 
 #include <vulkan/vulkan.h>
 #include <string>
+#include "Renderer.h"
 
 class Texture {
 public:
-    Texture(VkDevice device, const std::string& filename);
+    Texture(Renderer *renderer, const std::string &filename);
+
+    int GetWidth() const;
+    int GetHeight() const;
 
 protected:
-    VkImage m_textureImage;
-    VkDeviceMemory m_textureImageMemory;
-    VkImageView m_textureImageView;
-    VkSampler m_textureSampler;
+    VkImageView m_imageView;
+    VkSampler m_sampler;
     int m_width;
     int m_height;
     int m_channels;
+    Renderer::BoundImage m_boundImage;
 };
 
 
