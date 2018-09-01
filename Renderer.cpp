@@ -1100,3 +1100,87 @@ void Renderer::createSyncObjects() {
     }
 }
 
+Renderer::~Renderer() {
+    if(m_isInitialized) {
+        cleanup();
+    }
+}
+
+void Renderer::cleanup() {
+    cleanupSwapChain();
+    cleanupSyncObjects();
+    cleanupUniformBuffers();
+    cleanupCommandPools();
+
+    vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(m_device, m_perFrameDescriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(m_device, m_perTextureDescriptorSetLayout, nullptr);
+
+    vkDestroyDevice(m_device, nullptr);
+
+    if(m_enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(m_instance, m_callback, nullptr);
+    }
+
+    vkDestroyInstance(m_instance, nullptr);
+}
+
+void Renderer::cleanupSwapChain() {
+    for(auto framebuffer: m_swapChainFramebuffers) {
+        vkDestroyFramebuffer(m_device, framebuffer, nullptr);
+    }
+
+    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        auto& perFrameCmds = m_perFrameCommandBuffer[i];
+        if(!perFrameCmds.empty()) {
+            vkFreeCommandBuffers(m_device, m_perFrameCommandPool[i], perFrameCmds.size(), perFrameCmds.data());
+            perFrameCmds.clear();
+        }
+    }
+
+    vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+    vkDestroyRenderPass(m_device, m_renderPass, nullptr);
+
+    for(auto imageView: m_swapChainImageViews) {
+        vkDestroyImageView(m_device, imageView, nullptr);
+    }
+
+    vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+}
+
+void Renderer::cleanupSyncObjects() {
+    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        vkDestroySemaphore(m_device, m_imageAvailableSemaphores[i], nullptr);
+        vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
+        vkDestroyFence(m_device, m_inFlightFences[i], nullptr);
+    }
+}
+
+void Renderer::cleanupUniformBuffers() {
+    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        vkDestroyBuffer(m_device, m_uniformBuffers[i].buffer, nullptr);
+        vkFreeMemory(m_device, m_uniformBuffers[i].bufferMemory, nullptr);
+    }
+}
+
+void Renderer::cleanupCommandPools() {
+    vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+
+    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        vkDestroyCommandPool(m_device, m_perFrameCommandPool[i], nullptr);
+    }
+}
+
+void Renderer::DestroyImageView(VkImageView imageView) {
+    vkDestroyImageView(m_device, imageView, nullptr);
+}
+
+void Renderer::DestroySampler(VkSampler sampler) {
+    vkDestroySampler(m_device, sampler, nullptr);
+}
+
+void Renderer::DestroyImage(Renderer::BoundImage image) {
+    vkDestroyImage(m_device, image.image, nullptr);
+    vkFreeMemory(m_device, image.imageMemory, nullptr);
+}

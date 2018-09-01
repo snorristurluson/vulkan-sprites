@@ -9,6 +9,8 @@
 #include "Renderer.h"
 #include "Texture.h"
 
+// TODO: Hook into validation to allow tests to check for validation messages
+
 class RendererTest : public ::testing::Test {
 protected:
     void SetUp() override {

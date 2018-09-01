@@ -30,6 +30,8 @@ public:
         VkDeviceMemory imageMemory;
     };
 
+    ~Renderer();
+
     bool IsInitialized();
 
     void Initialize(GLFWwindow *window, Renderer::ValidationState validation);
@@ -54,6 +56,14 @@ public:
     VkSampler CreateSampler();
 
     VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
+
+    void DestroyImageView(VkImageView imageView);
+
+    void DestroySampler(VkSampler sampler);
+
+    void DestroyTextureDescriptorSet(VkDescriptorSet descriptorSet);
+
+    void DestroyImage(BoundImage image);
 
 protected:
     GLFWwindow *m_window;
@@ -162,6 +172,16 @@ protected:
     void createPerFrameDescriptorSets();
 
     void createSyncObjects();
+
+    void cleanup();
+
+    void cleanupSwapChain();
+
+    void cleanupSyncObjects();
+
+    void cleanupUniformBuffers();
+
+    void cleanupCommandPools();
 };
 
 

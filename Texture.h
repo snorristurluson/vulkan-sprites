@@ -13,11 +13,13 @@
 class Texture {
 public:
     Texture(Renderer *renderer, const std::string &filename);
+    ~Texture();
 
     int GetWidth() const;
     int GetHeight() const;
 
 protected:
+    Renderer* m_renderer;
     VkImageView m_imageView;
     VkSampler m_sampler;
     int m_width;
