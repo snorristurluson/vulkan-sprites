@@ -49,6 +49,7 @@ Texture::Texture(Renderer *renderer, const std::string &filename)
     
     m_imageView = renderer->CreateImageView(m_boundImage.image, format);
     m_sampler = renderer->CreateSampler();
+    m_descriptorSet = renderer->CreateTextureDescriptorSet(m_imageView, m_sampler);
 }
 
 int Texture::GetWidth() const {

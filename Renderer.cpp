@@ -13,6 +13,8 @@
 #include "Texture.h"
 #include "Vertex.h"
 
+#define MAX_NUM_TEXTURES 256
+
 namespace {
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_LUNARG_standard_validation"
@@ -548,7 +550,7 @@ void Renderer::createDescriptorSetLayouts() {
 
     layoutInfo.pBindings = &po;
 
-    if (vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_perObjectDescriptorSetLayout) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_perTextureDescriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout");
     }
 
@@ -640,7 +642,7 @@ void Renderer::createGraphicsPipeline() {
     colorBlending.blendConstants[2] = 0.0f;
     colorBlending.blendConstants[3] = 0.0f;
 
-    std::array<VkDescriptorSetLayout, 2> layouts = {m_perFrameDescriptorSetLayout, m_perObjectDescriptorSetLayout};
+    std::array<VkDescriptorSetLayout, 2> layouts = {m_perFrameDescriptorSetLayout, m_perTextureDescriptorSetLayout};
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = layouts.size();
@@ -980,13 +982,13 @@ void Renderer::createDescriptorPool() {
     poolSizes[0].descriptorCount = descriptorCount;
 
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = descriptorCount;
+    poolSizes[1].descriptorCount = MAX_NUM_TEXTURES;
 
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = poolSizes.size();
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = descriptorCount;
+    poolInfo.maxSets = descriptorCount + MAX_NUM_TEXTURES;
 
     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
@@ -1039,35 +1041,36 @@ void Renderer::createPerFrameDescriptorSets() {
     }
 }
 
-//void Renderer::createPerObjectDescriptorSets() {
-//    std::vector<VkDescriptorSetLayout> layouts(getMaxFramesInFlight(), m_perObjectDescriptorSetLayout);
-//    VkDescriptorSetAllocateInfo allocInfo = {};
-//    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-//    allocInfo.descriptorPool = m_descriptorPool;
-//    allocInfo.descriptorSetCount = getMaxFramesInFlight();
-//    allocInfo.pSetLayouts = layouts.data();
-//
-//    m_perObjectDescriptorSets.resize(getMaxFramesInFlight());
-//    if(vkAllocateDescriptorSets(m_device, &allocInfo, &m_perObjectDescriptorSets[0]) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to allocate descriptor sets");
-//    }
-//
-//    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
-//        VkWriteDescriptorSet descriptorWrites = {};
-//
-//        VkDescriptorImageInfo imageInfo = {};
-//        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//        imageInfo.offset = 0;
-//        imageInfo.range = sizeof(UniformBufferObject);
-//
-//        descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-//        descriptorWrites.dstSet = m_perFrameDescriptorSets[i];
-//        descriptorWrites.dstBinding = 0;
-//        descriptorWrites.dstArrayElement = 0;
-//        descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//        descriptorWrites.descriptorCount = 1;
-//        descriptorWrites.pBufferInfo = &bufferInfo;
-//
-//        vkUpdateDescriptorSets(m_device, 1, &descriptorWrites, 0, nullptr);
-//    }
-//}
+VkDescriptorSet Renderer::CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler) {
+    VkDescriptorSetAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = m_descriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &m_perTextureDescriptorSetLayout;
+
+    VkDescriptorSet descriptorSet;
+    if (vkAllocateDescriptorSets(m_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate texture descriptor set");
+    }
+
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        VkDescriptorImageInfo imageInfo = {};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = imageView;
+        imageInfo.sampler = sampler;
+
+        VkWriteDescriptorSet descriptorWrites = {};
+        descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites.dstSet = descriptorSet;
+        descriptorWrites.dstBinding = 0;
+        descriptorWrites.dstArrayElement = 0;
+        descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites.descriptorCount = 1;
+        descriptorWrites.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(m_device, 1, &descriptorWrites, 0, nullptr);
+    }
+
+    return descriptorSet;
+}
+

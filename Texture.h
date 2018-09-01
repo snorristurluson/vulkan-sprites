@@ -24,6 +24,7 @@ protected:
     int m_height;
     int m_channels;
     Renderer::BoundImage m_boundImage;
+    VkDescriptorSet m_descriptorSet;
 };
 
 

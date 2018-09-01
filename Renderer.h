@@ -53,6 +53,8 @@ public:
 
     VkSampler CreateSampler();
 
+    VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
+
 protected:
     GLFWwindow *m_window;
 
@@ -79,7 +81,7 @@ protected:
     VkRenderPass m_renderPass;
 
     VkDescriptorSetLayout m_perFrameDescriptorSetLayout;
-    VkDescriptorSetLayout m_perObjectDescriptorSetLayout;
+    VkDescriptorSetLayout m_perTextureDescriptorSetLayout;
 
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;
@@ -90,7 +92,6 @@ protected:
 
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_perFrameDescriptorSets;
-    std::vector<VkDescriptorSet> m_perObjectDescriptorSets;
 
     std::vector<BoundBuffer> m_uniformBuffers;
 
