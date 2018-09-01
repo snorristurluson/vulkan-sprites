@@ -193,9 +193,10 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
-    createDescriptorPool();
     createUniformBuffers();
+    createDescriptorPool();
     createPerFrameDescriptorSets();
+    createSyncObjects();
 
     m_isInitialized = true;
 }
@@ -1072,5 +1073,30 @@ VkDescriptorSet Renderer::CreateTextureDescriptorSet(VkImageView imageView, VkSa
     }
 
     return descriptorSet;
+}
+
+void Renderer::createSyncObjects() {
+    m_imageAvailableSemaphores.resize(getMaxFramesInFlight());
+    m_renderFinishedSemaphores.resize(getMaxFramesInFlight());
+    m_inFlightFences.resize(getMaxFramesInFlight());
+
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo = {};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        if(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create semaphore for frame");
+        }
+        if(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create semaphore for frame");
+        }
+        if(vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create fence for frame");
+        }
+    }
 }
 

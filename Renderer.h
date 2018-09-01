@@ -95,6 +95,11 @@ protected:
 
     std::vector<BoundBuffer> m_uniformBuffers;
 
+    std::vector<VkSemaphore> m_imageAvailableSemaphores;
+    std::vector<VkSemaphore> m_renderFinishedSemaphores;
+    std::vector<VkFence> m_inFlightFences;
+    size_t m_currentFrame = 1;
+
 protected:
     void createInstance();
     void setupDebugCallback();
@@ -155,6 +160,8 @@ protected:
     void createUniformBuffers();
 
     void createPerFrameDescriptorSets();
+
+    void createSyncObjects();
 };
 
 
