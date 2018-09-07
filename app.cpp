@@ -28,6 +28,7 @@ void App::Run()
 {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {

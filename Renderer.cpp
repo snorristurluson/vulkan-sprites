@@ -1240,10 +1240,8 @@ bool Renderer::StartFrame() {
     renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_swapChainExtent;
-
-    VkClearValue clearColor = {0.0f, 1.0f, 0.0f, 1.0f};
     renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    renderPassInfo.pClearValues = &m_clearColor;
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -1326,5 +1324,13 @@ void Renderer::EndFrame() {
         throw std::runtime_error("failed to present swap chain image");
     }
     m_currentFrame = m_nextFrame;
+}
+
+const VkClearValue &Renderer::ClearColor() const {
+    return m_clearColor;
+}
+
+void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
+    Renderer::m_clearColor = m_clearColor;
 }
 

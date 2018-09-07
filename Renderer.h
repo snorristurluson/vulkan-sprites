@@ -117,6 +117,13 @@ protected:
     uint32_t m_currentFrame = 1;
     uint32_t m_nextFrame;
 
+    VkClearValue m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+public:
+    const VkClearValue &ClearColor() const;
+
+    void SetClearColor(const VkClearValue &m_clearColor);
+
+
 protected:
     void createInstance();
     void setupDebugCallback();
