@@ -34,14 +34,12 @@ Texture::Texture(Renderer *renderer, const std::string &filename) : m_renderer(r
 
     m_renderer->TransitionImageLayout(
             m_boundImage.image,
-            format,
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
     m_renderer->CopyBufferToImage(stagingBuffer.buffer, m_boundImage.image, m_width, m_height);
     m_renderer->TransitionImageLayout(
             m_boundImage.image,
-            format,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

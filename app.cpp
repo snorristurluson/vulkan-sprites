@@ -32,6 +32,7 @@ void App::Run()
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
+            r.DrawSprite(100, 200, 256, 256);
             r.EndFrame();
         }
     }

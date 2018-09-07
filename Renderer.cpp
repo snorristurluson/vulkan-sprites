@@ -1,3 +1,7 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#include <memory>
+
 //
 // Created by Snorri Sturluson on 20/08/2018.
 //
@@ -13,7 +17,12 @@
 #include "Texture.h"
 #include "Vertex.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-stack-address"
+
 #define MAX_NUM_TEXTURES 256
+#define UNUSED(x) (void(x))
+
 
 namespace {
     const std::vector<const char *> validationLayers = {
@@ -82,6 +91,9 @@ namespace {
     VKAPI_ATTR VkBool32 VKAPI_CALL
     debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
                   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData) {
+        UNUSED(messageType);
+        UNUSED(pUserData);
+
         if (messageSeverity &
             (VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)) {
             std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
@@ -288,13 +300,13 @@ Renderer::QueueFamilyIndices Renderer::findQueueFamilies(VkPhysicalDevice device
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-    int i = 0;
+    uint32_t i = 0;
     for (const auto &queueFamily : queueFamilies) {
         if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
         }
 
-        VkBool32 presentSupport = false;
+        VkBool32 presentSupport = 0;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentSupport);
 
         if (queueFamily.queueCount > 0 && presentSupport) {
@@ -357,10 +369,10 @@ void Renderer::createLogicalDevice() {
     QueueFamilyIndices indices = findQueueFamilies(m_physicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<int> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
 
     float queuePriority = 1.0f;
-    for (int queueFamily : uniqueQueueFamilies) {
+    for (uint32_t queueFamily : uniqueQueueFamilies) {
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = queueFamily;
@@ -458,7 +470,7 @@ void Renderer::createImageViews() {
     }
 }
 
-size_t Renderer::getMaxFramesInFlight() {
+uint32_t Renderer::getMaxFramesInFlight() {
     return m_swapChainImages.size();
 }
 
@@ -736,7 +748,7 @@ void Renderer::createCommandPool() {
 }
 
 std::shared_ptr<Texture> Renderer::CreateTexture(const std::string &filename) {
-    return std::shared_ptr<Texture>(new Texture(this, filename));
+    return std::make_shared<Texture>(this, filename);
 }
 
 Renderer::BoundBuffer
@@ -832,7 +844,7 @@ Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageT
     return Renderer::BoundImage{image, imageMemory};
 }
 
-void Renderer::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+void Renderer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier = {};
@@ -977,7 +989,7 @@ VkSampler Renderer::CreateSampler() {
 
 void Renderer::createDescriptorPool() {
     std::array<VkDescriptorPoolSize, 2> poolSizes = {};
-    size_t descriptorCount = getMaxFramesInFlight() * 2;
+    uint32_t descriptorCount = getMaxFramesInFlight() * 2;
 
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = descriptorCount;
@@ -1334,3 +1346,10 @@ void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
     Renderer::m_clearColor = m_clearColor;
 }
 
+void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
+
+}
+
+
+#pragma clang diagnostic pop
+#pragma clang diagnostic pop

@@ -45,7 +45,7 @@ public:
             VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
 
     void CopyToBufferMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size);
-    void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
     void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
@@ -70,6 +70,8 @@ public:
     bool StartFrame();
 
     void EndFrame();
+
+    void DrawSprite(int x, int y, uint32_t width, uint32_t height);
 
 protected:
     GLFWwindow *m_window;
@@ -131,12 +133,13 @@ protected:
 
     struct QueueFamilyIndices
     {
-        int graphicsFamily = -1;
-        int presentFamily = -1;
+        uint32_t graphicsFamily = std::numeric_limits<uint32_t>::max();
+        uint32_t presentFamily = std::numeric_limits<uint32_t>::max();
 
         bool isComplete()
         {
-            return graphicsFamily >= 0 && presentFamily >= 0;
+            return graphicsFamily != std::numeric_limits<uint32_t>::max() &&
+                presentFamily != std::numeric_limits<uint32_t>::max();
         }
     };
 
@@ -157,7 +160,7 @@ protected:
 
     void createImageViews();
 
-    size_t getMaxFramesInFlight();
+    uint32_t getMaxFramesInFlight();
 
     VkImageView createImageView(VkImage image, VkFormat format);
 
