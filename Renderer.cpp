@@ -1312,6 +1312,3 @@ void Renderer::EndFrame() {
     m_currentFrame = m_nextFrame;
 }
 
-void Renderer::DummyRender() {
-
-}

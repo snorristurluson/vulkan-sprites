@@ -31,7 +31,6 @@ void App::Run()
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         r.StartFrame();
-        r.DummyRender();
         r.EndFrame();
     }
     r.WaitUntilDeviceIdle();
