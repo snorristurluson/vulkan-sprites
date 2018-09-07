@@ -1184,3 +1184,134 @@ void Renderer::DestroyImage(Renderer::BoundImage image) {
     vkDestroyImage(m_device, image.image, nullptr);
     vkFreeMemory(m_device, image.imageMemory, nullptr);
 }
+
+void Renderer::WaitUntilDeviceIdle() {
+    vkDeviceWaitIdle(m_device);
+}
+
+void Renderer::StartFrame() {
+    vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+
+    auto& perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
+    if(!perFrameCmds.empty()) {
+        vkFreeCommandBuffers(m_device, m_perFrameCommandPool[m_currentFrame], perFrameCmds.size(), &perFrameCmds[0]);
+        perFrameCmds.clear();
+    }
+
+    VkResult result = vkAcquireNextImageKHR(
+            m_device,
+            m_swapChain,
+            std::numeric_limits<uint64_t>::max(),
+            m_imageAvailableSemaphores[m_currentFrame],
+            VK_NULL_HANDLE,
+            &m_nextFrame);
+
+    if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain();
+        return;
+    } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image");
+    }
+
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_perFrameCommandPool[m_currentFrame];
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    perFrameCmds.resize(1);
+    if(vkAllocateCommandBuffers(m_device, &allocInfo, perFrameCmds.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate command buffer");
+    }
+
+    auto commandBuffer = perFrameCmds[0];
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+    if(vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChainExtent;
+
+    VkClearValue clearColor = {0.0f, 1.0f, 0.0f, 1.0f};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+    vkCmdBindDescriptorSets(commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_pipelineLayout,
+            0, 1,
+            &m_perFrameDescriptorSets[m_currentFrame],
+            0, nullptr);
+}
+
+void Renderer::recreateSwapChain() {
+    // TODO
+}
+
+void Renderer::EndFrame() {
+    auto& perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
+    auto commandBuffer = perFrameCmds[0];
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if(vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer");
+    }
+
+    VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
+
+    if(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit command buffer");
+    }
+
+    VkSwapchainKHR swapChains[] = {m_swapChain};
+
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &m_nextFrame;
+
+    auto result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+        recreateSwapChain();
+    } else if(result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image");
+    }
+    m_currentFrame = m_nextFrame;
+}
+
+void Renderer::DummyRender() {
+
+}

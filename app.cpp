@@ -3,6 +3,7 @@
 //
 
 #include "app.h"
+#include "Renderer.h"
 
 App::App() : m_window(nullptr)
 {
@@ -25,9 +26,15 @@ void App::framebufferResizeCallback(GLFWwindow *window, int width, int height)
 
 void App::Run()
 {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
+        r.StartFrame();
+        r.DummyRender();
+        r.EndFrame();
     }
+    r.WaitUntilDeviceIdle();
 }
 
 GLFWwindow *App::GetWindow()

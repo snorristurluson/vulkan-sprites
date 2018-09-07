@@ -65,6 +65,12 @@ public:
 
     void DestroyImage(BoundImage image);
 
+    void WaitUntilDeviceIdle();
+
+    void StartFrame();
+
+    void EndFrame();
+
 protected:
     GLFWwindow *m_window;
 
@@ -108,7 +114,8 @@ protected:
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
-    size_t m_currentFrame = 1;
+    uint32_t m_currentFrame = 1;
+    uint32_t m_nextFrame;
 
 protected:
     void createInstance();
@@ -182,6 +189,8 @@ protected:
     void cleanupUniformBuffers();
 
     void cleanupCommandPools();
+
+    void recreateSwapChain();
 };
 
 
