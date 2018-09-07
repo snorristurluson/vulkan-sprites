@@ -67,7 +67,7 @@ public:
 
     void WaitUntilDeviceIdle();
 
-    void StartFrame();
+    bool StartFrame();
 
     void EndFrame();
 

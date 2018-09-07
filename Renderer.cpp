@@ -1189,7 +1189,7 @@ void Renderer::WaitUntilDeviceIdle() {
     vkDeviceWaitIdle(m_device);
 }
 
-void Renderer::StartFrame() {
+bool Renderer::StartFrame() {
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
     auto& perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
@@ -1208,7 +1208,7 @@ void Renderer::StartFrame() {
 
     if(result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapChain();
-        return;
+        return false;
     } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image");
     }
@@ -1255,10 +1255,26 @@ void Renderer::StartFrame() {
             0, 1,
             &m_perFrameDescriptorSets[m_currentFrame],
             0, nullptr);
+
+    return true;
 }
 
 void Renderer::recreateSwapChain() {
-    // TODO
+    int width = 0;
+    int height = 0;
+    while(width == 0 || height == 0) {
+        glfwGetFramebufferSize(m_window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(m_device);
+
+    cleanupSwapChain();
+    createSwapChain();
+    createImageViews();
+    createRenderPass();
+    createGraphicsPipeline();
+    createFramebuffers();
 }
 
 void Renderer::EndFrame() {

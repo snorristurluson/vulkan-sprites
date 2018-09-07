@@ -30,8 +30,9 @@ void App::Run()
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
-        r.StartFrame();
-        r.EndFrame();
+        if(r.StartFrame()) {
+            r.EndFrame();
+        }
     }
     r.WaitUntilDeviceIdle();
 }
