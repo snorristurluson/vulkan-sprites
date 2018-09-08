@@ -174,9 +174,19 @@ namespace {
     }
 
     struct UniformBufferObject {
-        glm::mat4 view;
-        glm::mat4 proj;
+        glm::vec2 extent;
     };
+}
+
+Renderer::Renderer() :
+    m_indexWriteStart(nullptr),
+    m_currentIndexWrite(nullptr),
+    m_indexWriteEnd(nullptr),
+    m_vertexWriteStart(nullptr),
+    m_currentVertexWrite(nullptr),
+    m_vertexWriteEnd(nullptr)
+{
+
 }
 
 Renderer::~Renderer() {
@@ -216,6 +226,9 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createPerFrameDescriptorSets();
     createSyncObjects();
     createIndexAndVertexBuffers();
+
+    uint8_t whitePixel[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    m_defaultTexture = std::make_shared<Texture>(this, 1, 1, &whitePixel[0]);
 
     m_isInitialized = true;
 }
@@ -478,7 +491,7 @@ void Renderer::createImageViews() {
 }
 
 uint32_t Renderer::getMaxFramesInFlight() {
-    return m_swapChainImages.size();
+    return static_cast<uint32_t>(m_swapChainImages.size());
 }
 
 VkImageView Renderer::createImageView(VkImage image, VkFormat format) {
@@ -1120,6 +1133,8 @@ void Renderer::createSyncObjects() {
 }
 
 void Renderer::cleanup() {
+    m_defaultTexture.reset();
+
     cleanupSwapChain();
     cleanupSyncObjects();
     cleanupUniformBuffers();
@@ -1235,12 +1250,56 @@ bool Renderer::StartFrame() {
 }
 
 void Renderer::EndFrame() {
-    unmapStagingBuffers();
 
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     auto commandBuffer = perFrameCmds[0];
 
     copyStagingBuffersToDevice(commandBuffer);
+    unmapStagingBuffers();
+
+    int width, height;
+    glfwGetFramebufferSize(m_window, &width, &height);
+    UniformBufferObject ubo = {};
+    ubo.extent.x = width;
+    ubo.extent.y = height;
+
+    void* data;
+    vkMapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory, 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
+
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChainExtent;
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &m_clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+    std::array<VkDescriptorSet, 2> descriptorSets = {
+            m_perFrameDescriptorSets[m_currentFrame],
+            m_defaultTexture->GetDescriptorSet()
+    };
+    vkCmdBindDescriptorSets(commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipelineLayout,
+                            0,
+                            descriptorSets.size(),
+                            descriptorSets.data(),
+                            0, nullptr);
+
+    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
+    VkDeviceSize offsets[] = {0};
+
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
+
+    vkCmdDrawIndexed(commandBuffer, m_numIndices, 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -1290,8 +1349,8 @@ void Renderer::EndFrame() {
 }
 
 void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
-    VkDeviceSize indexSize = m_currentIndexWrite - m_indexWriteStart;
-    VkDeviceSize vertexSize = m_currentVertexWrite - m_vertexWriteStart;
+    VkDeviceSize indexSize = (m_currentIndexWrite - m_indexWriteStart) * sizeof(uint16_t);
+    VkDeviceSize vertexSize = (m_currentVertexWrite - m_vertexWriteStart) * sizeof(Vertex);
 
     VkBufferCopy copyRegion = {};
     copyRegion.size = indexSize;
@@ -1311,9 +1370,16 @@ void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
             &copyRegion);
 }
 
-void Renderer::unmapStagingBuffers() const {
+void Renderer::unmapStagingBuffers() {
     vkUnmapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory);
+    m_indexWriteStart = nullptr;
+    m_currentIndexWrite = nullptr;
+    m_indexWriteEnd = nullptr;
+
     vkUnmapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory);
+    m_vertexWriteStart = nullptr;
+    m_currentVertexWrite = nullptr;
+    m_vertexWriteEnd = nullptr;
 }
 
 void Renderer::startMainCommandBuffer() {
@@ -1339,26 +1405,6 @@ void Renderer::startMainCommandBuffer() {
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer");
     }
-
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_renderPass;
-    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_swapChainExtent;
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &m_clearColor;
-
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-
-    vkCmdBindDescriptorSets(commandBuffer,
-                            VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipelineLayout,
-                            0, 1,
-                            &m_perFrameDescriptorSets[m_currentFrame],
-                            0, nullptr);
 }
 
 void Renderer::mapStagingBufferMemory() {
@@ -1374,6 +1420,8 @@ void Renderer::mapStagingBufferMemory() {
     vkMapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory, 0, vertexBufferSize, 0, &data);
     m_vertexWriteStart = reinterpret_cast<Vertex*>(data);
     m_currentVertexWrite = m_vertexWriteStart;
+
+    m_numIndices = 0;
 }
 
 void Renderer::recreateSwapChain() {
@@ -1394,7 +1442,7 @@ void Renderer::recreateSwapChain() {
     createFramebuffers();
 }
 
-const VkClearValue &Renderer::ClearColor() const {
+const VkClearValue &Renderer::GetClearColor() const {
     return m_clearColor;
 }
 
@@ -1403,7 +1451,45 @@ void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
 }
 
 void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
+    if(!m_currentIndexWrite) {
+        throw std::runtime_error("index write destination is null");
+    }
+    if(!m_currentVertexWrite) {
+        throw std::runtime_error("vertex write destination is null");
+    }
 
+    // TODO guard against buffer overflow
+
+    auto base = static_cast<uint16_t>(m_currentVertexWrite - m_vertexWriteStart);
+
+    m_currentVertexWrite->pos = {x, y};
+    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    ++m_currentVertexWrite;
+
+    m_currentVertexWrite->pos = {x + width, y};
+    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    ++m_currentVertexWrite;
+
+    m_currentVertexWrite->pos = {x + width, y + height};
+    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    ++m_currentVertexWrite;
+
+    m_currentVertexWrite->pos = {x, y + height};
+    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    ++m_currentVertexWrite;
+
+    *m_currentIndexWrite++ = base;
+    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 1);
+    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 3);
+    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 3);
+    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 1);
+    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 2);
+
+    m_numIndices += 6;
 }
 
 void Renderer::createIndexAndVertexBuffers() {
@@ -1458,6 +1544,14 @@ VkDeviceSize Renderer::getMaxNumIndices() {
 
 VkDeviceSize Renderer::getMaxNumVertices() {
     return 16384;
+}
+
+VkDeviceSize Renderer::GetNumIndices() {
+    return m_currentIndexWrite - m_indexWriteStart;
+}
+
+VkDeviceSize Renderer::GetNumVertices() {
+    return m_currentVertexWrite - m_vertexWriteStart;
 }
 
 #pragma clang diagnostic pop

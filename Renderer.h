@@ -32,6 +32,7 @@ public:
         VkDeviceMemory imageMemory;
     };
 
+    Renderer();
     ~Renderer();
 
     bool IsInitialized();
@@ -71,6 +72,12 @@ public:
     void EndFrame();
 
     void DrawSprite(int x, int y, uint32_t width, uint32_t height);
+
+    VkDeviceSize GetNumIndices();
+    VkDeviceSize GetNumVertices();
+
+    const VkClearValue &GetClearColor() const;
+    void SetClearColor(const VkClearValue &m_clearColor);
 
 protected:
     GLFWwindow *m_window;
@@ -132,11 +139,9 @@ protected:
     Vertex* m_currentVertexWrite;
     Vertex* m_vertexWriteEnd;
 
-public:
-    const VkClearValue &ClearColor() const;
+    uint32_t m_numIndices;
 
-    void SetClearColor(const VkClearValue &m_clearColor);
-
+    std::shared_ptr<Texture> m_defaultTexture;
 
 protected:
     void createInstance();
@@ -230,7 +235,7 @@ protected:
 
     void mapStagingBufferMemory();
 
-    void unmapStagingBuffers() const;
+    void unmapStagingBuffers();
 
     void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const;
 };

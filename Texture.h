@@ -13,10 +13,13 @@
 class Texture {
 public:
     Texture(Renderer *renderer, const std::string &filename);
+    Texture(Renderer *renderer, int width, int height, uint8_t *pixels);
+
     ~Texture();
 
     int GetWidth() const;
     int GetHeight() const;
+    VkDescriptorSet GetDescriptorSet();
 
 protected:
     Renderer* m_renderer;
@@ -27,6 +30,8 @@ protected:
     int m_channels;
     Renderer::BoundImage m_boundImage;
     VkDescriptorSet m_descriptorSet;
+
+    void init(int width, int height, uint8_t *pixels);
 };
 
 
