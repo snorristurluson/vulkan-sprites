@@ -12,6 +12,8 @@
 #include <memory>
 
 class Texture;
+class Vertex;
+
 class Renderer
 {
 public:
@@ -117,6 +119,19 @@ protected:
     uint32_t m_nextFrame;
 
     VkClearValue m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    std::vector<BoundBuffer> m_indexBuffers;
+    std::vector<BoundBuffer> m_indexStagingBuffers;
+    std::vector<BoundBuffer> m_vertexBuffers;
+    std::vector<BoundBuffer> m_vertexStagingBuffers;
+
+    uint16_t* m_indexWriteStart;
+    uint16_t* m_currentIndexWrite;
+    uint16_t* m_indexWriteEnd;
+    Vertex* m_vertexWriteStart;
+    Vertex* m_currentVertexWrite;
+    Vertex* m_vertexWriteEnd;
+
 public:
     const VkClearValue &ClearColor() const;
 
@@ -198,6 +213,26 @@ protected:
     void cleanupCommandPools();
 
     void recreateSwapChain();
+
+    void createIndexAndVertexBuffers();
+
+    VkDeviceSize getMaxNumIndices();
+
+    VkDeviceSize getMaxNumVertices();
+
+    void cleanupIndexAndVertexBuffers();
+
+    void startMainCommandBuffer();
+
+    VkDeviceSize getIndexBufferSize();
+
+    VkDeviceSize getVertexBufferSize();
+
+    void mapStagingBufferMemory();
+
+    void unmapStagingBuffers() const;
+
+    void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const;
 };
 
 

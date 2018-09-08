@@ -215,6 +215,7 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createDescriptorPool();
     createPerFrameDescriptorSets();
     createSyncObjects();
+    createIndexAndVertexBuffers();
 
     m_isInitialized = true;
 }
@@ -1122,6 +1123,7 @@ void Renderer::cleanup() {
     cleanupSwapChain();
     cleanupSyncObjects();
     cleanupUniformBuffers();
+    cleanupIndexAndVertexBuffers();
     cleanupCommandPools();
 
     vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
@@ -1225,71 +1227,20 @@ bool Renderer::StartFrame() {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = m_perFrameCommandPool[m_currentFrame];
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
+    startMainCommandBuffer();
 
-    perFrameCmds.resize(1);
-    if (vkAllocateCommandBuffers(m_device, &allocInfo, perFrameCmds.data()) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate command buffer");
-    }
-
-    auto commandBuffer = perFrameCmds[0];
-
-    VkCommandBufferBeginInfo beginInfo = {};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer");
-    }
-
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_renderPass;
-    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_swapChainExtent;
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &m_clearColor;
-
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-
-    vkCmdBindDescriptorSets(commandBuffer,
-                            VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipelineLayout,
-                            0, 1,
-                            &m_perFrameDescriptorSets[m_currentFrame],
-                            0, nullptr);
+    mapStagingBufferMemory();
 
     return true;
 }
 
-void Renderer::recreateSwapChain() {
-    int width = 0;
-    int height = 0;
-    while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(m_window, &width, &height);
-        glfwWaitEvents();
-    }
-
-    vkDeviceWaitIdle(m_device);
-
-    cleanupSwapChain();
-    createSwapChain();
-    createImageViews();
-    createRenderPass();
-    createGraphicsPipeline();
-    createFramebuffers();
-}
-
 void Renderer::EndFrame() {
+    unmapStagingBuffers();
+
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     auto commandBuffer = perFrameCmds[0];
+
+    copyStagingBuffersToDevice(commandBuffer);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -1338,6 +1289,111 @@ void Renderer::EndFrame() {
     m_currentFrame = m_nextFrame;
 }
 
+void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
+    VkDeviceSize indexSize = m_currentIndexWrite - m_indexWriteStart;
+    VkDeviceSize vertexSize = m_currentVertexWrite - m_vertexWriteStart;
+
+    VkBufferCopy copyRegion = {};
+    copyRegion.size = indexSize;
+    vkCmdCopyBuffer(
+            commandBuffer,
+            m_indexStagingBuffers[m_currentFrame].buffer,
+            m_indexBuffers[m_currentFrame].buffer,
+            1,
+            &copyRegion);
+
+    copyRegion.size = vertexSize;
+    vkCmdCopyBuffer(
+            commandBuffer,
+            m_vertexStagingBuffers[m_currentFrame].buffer,
+            m_vertexBuffers[m_currentFrame].buffer,
+            1,
+            &copyRegion);
+}
+
+void Renderer::unmapStagingBuffers() const {
+    vkUnmapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory);
+    vkUnmapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory);
+}
+
+void Renderer::startMainCommandBuffer() {
+    auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
+
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_perFrameCommandPool[m_currentFrame];
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    perFrameCmds.resize(1);
+    if (vkAllocateCommandBuffers(m_device, &allocInfo, perFrameCmds.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate command buffer");
+    }
+
+    auto commandBuffer = perFrameCmds[0];
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChainExtent;
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &m_clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+    vkCmdBindDescriptorSets(commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipelineLayout,
+                            0, 1,
+                            &m_perFrameDescriptorSets[m_currentFrame],
+                            0, nullptr);
+}
+
+void Renderer::mapStagingBufferMemory() {
+    VkDeviceSize indexBufferSize = getIndexBufferSize();
+    VkDeviceSize vertexBufferSize = getVertexBufferSize();
+
+    void* data;
+
+    vkMapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory, 0, indexBufferSize, 0, &data);
+    m_indexWriteStart = reinterpret_cast<uint16_t*>(data);
+    m_currentIndexWrite = m_indexWriteStart;
+
+    vkMapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory, 0, vertexBufferSize, 0, &data);
+    m_vertexWriteStart = reinterpret_cast<Vertex*>(data);
+    m_currentVertexWrite = m_vertexWriteStart;
+}
+
+void Renderer::recreateSwapChain() {
+    int width = 0;
+    int height = 0;
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(m_window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(m_device);
+
+    cleanupSwapChain();
+    createSwapChain();
+    createImageViews();
+    createRenderPass();
+    createGraphicsPipeline();
+    createFramebuffers();
+}
+
 const VkClearValue &Renderer::ClearColor() const {
     return m_clearColor;
 }
@@ -1348,6 +1404,60 @@ void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
 
 void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
 
+}
+
+void Renderer::createIndexAndVertexBuffers() {
+    VkDeviceSize indexBufferSize = getIndexBufferSize();
+    VkDeviceSize vertexBufferSize = getVertexBufferSize();
+
+    m_indexBuffers.resize(getMaxFramesInFlight());
+    m_indexStagingBuffers.resize(getMaxFramesInFlight());
+    m_vertexBuffers.resize(getMaxFramesInFlight());
+    m_vertexStagingBuffers.resize(getMaxFramesInFlight());
+
+    for(uint32_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        m_indexStagingBuffers[i] = CreateBuffer(
+                indexBufferSize,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        m_indexBuffers[i] = CreateBuffer(
+                indexBufferSize,
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        m_vertexStagingBuffers[i] = CreateBuffer(
+                vertexBufferSize,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        m_vertexBuffers[i] = CreateBuffer(
+                vertexBufferSize,
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    }
+}
+
+VkDeviceSize Renderer::getVertexBufferSize() { return getMaxNumVertices() * sizeof(Vertex); }
+
+VkDeviceSize Renderer::getIndexBufferSize() { return getMaxNumIndices() * sizeof(uint16_t); }
+
+void Renderer::cleanupIndexAndVertexBuffers() {
+    for(uint32_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        DestroyBuffer(m_indexStagingBuffers[i]);
+        DestroyBuffer(m_indexBuffers[i]);
+        DestroyBuffer(m_vertexStagingBuffers[i]);
+        DestroyBuffer(m_vertexBuffers[i]);
+    }
+}
+
+VkDeviceSize Renderer::getMaxNumIndices() {
+    return 16384;
+}
+
+VkDeviceSize Renderer::getMaxNumVertices() {
+    return 16384;
 }
 
 #pragma clang diagnostic pop
