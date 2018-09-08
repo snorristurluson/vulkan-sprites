@@ -101,3 +101,18 @@ TEST_F(RendererTest, DrawSprite) {
 
     // TODO ensure validation log is empty
 }
+
+TEST_F(RendererTest, SetTexture) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+
+    auto t = r.CreateTexture("resources/texture.jpg");
+
+    r.StartFrame();
+    r.SetTexture(t);
+    r.DrawSprite(0, 0, 100, 100);
+    r.EndFrame();
+    r.WaitUntilDeviceIdle();
+
+    // TODO ensure validation log is empty
+}

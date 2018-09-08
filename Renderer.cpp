@@ -649,7 +649,7 @@ void Renderer::createGraphicsPipeline() {
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -1134,6 +1134,7 @@ void Renderer::createSyncObjects() {
 
 void Renderer::cleanup() {
     m_defaultTexture.reset();
+    m_currentTexture.reset();
 
     cleanupSwapChain();
     cleanupSyncObjects();
@@ -1281,9 +1282,15 @@ void Renderer::EndFrame() {
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
+    VkDescriptorSet ds;
+    if(m_currentTexture) {
+        ds = m_currentTexture->GetDescriptorSet();
+    } else {
+        ds = m_defaultTexture->GetDescriptorSet();
+    }
     std::array<VkDescriptorSet, 2> descriptorSets = {
             m_perFrameDescriptorSets[m_currentFrame],
-            m_defaultTexture->GetDescriptorSet()
+            ds
     };
     vkCmdBindDescriptorSets(commandBuffer,
                             VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1469,17 +1476,17 @@ void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
 
     m_currentVertexWrite->pos = {x + width, y};
     m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
-    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    m_currentVertexWrite->texCoord = {1.0f, 0.0f};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y + height};
     m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
-    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    m_currentVertexWrite->texCoord = {1.0f, 1.0f};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x, y + height};
     m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
-    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    m_currentVertexWrite->texCoord = {0.0f, 1.0f};
     ++m_currentVertexWrite;
 
     *m_currentIndexWrite++ = base;
@@ -1552,6 +1559,12 @@ VkDeviceSize Renderer::GetNumIndices() {
 
 VkDeviceSize Renderer::GetNumVertices() {
     return m_currentVertexWrite - m_vertexWriteStart;
+}
+
+void Renderer::SetTexture(std::shared_ptr<Texture> texture) {
+    m_currentTexture = texture;
+
+    // todo Changing texture needs to trigger a draw cmd
 }
 
 #pragma clang diagnostic pop

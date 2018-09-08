@@ -79,6 +79,8 @@ public:
     const VkClearValue &GetClearColor() const;
     void SetClearColor(const VkClearValue &m_clearColor);
 
+    void SetTexture(std::shared_ptr<Texture> texture);
+
 protected:
     GLFWwindow *m_window;
 
@@ -142,6 +144,7 @@ protected:
     uint32_t m_numIndices;
 
     std::shared_ptr<Texture> m_defaultTexture;
+    std::shared_ptr<Texture> m_currentTexture;
 
 protected:
     void createInstance();

@@ -29,10 +29,14 @@ void App::Run()
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
+    auto t = r.CreateTexture("resources/texture.jpg");
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
-            r.DrawSprite(300, 200, 256, 256);
+            r.SetTexture(t);
+            r.DrawSprite(0, 0, 100, 100);
+            r.DrawSprite(200, 200, 200, 200);
+            r.DrawSprite(300, 300, 300, 300);
             r.EndFrame();
         }
     }
