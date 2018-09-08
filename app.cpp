@@ -5,6 +5,8 @@
 #include "app.h"
 #include "Renderer.h"
 
+#include <string>
+
 App::App() : m_window(nullptr)
 {
     glfwInit();

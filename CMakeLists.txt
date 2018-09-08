@@ -13,7 +13,7 @@ endif(UNIX)
 # macOS specific settings
 # Needs MoltenVK, plus brew installed packages go in a different location
 if(APPLE)
-    set(VULKAN_DIR ~/vulkansdk-macos-1.1.82.0/macOS)
+    set(VULKAN_DIR $ENV{HOME}/vulkansdk-macos-1.1.82.0/macOS)
     include_directories(${VULKAN_DIR}/include)
     link_directories(${VULKAN_DIR}/lib)
     link_libraries(MoltenVK)
