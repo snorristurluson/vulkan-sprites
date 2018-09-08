@@ -39,31 +39,28 @@ public:
     std::shared_ptr<Texture> CreateTexture(const std::string &filename);
 
     BoundBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+    void DestroyBuffer(BoundBuffer buffer);
+
     BoundImage CreateImage(
             uint32_t width, uint32_t height,
             VkFormat format, VkImageTiling tiling,
             VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+    void DestroyImage(BoundImage image);
 
     void CopyToBufferMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size);
-    void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
     void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
-    void DestroyBuffer(BoundBuffer buffer);
+    void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
     VkImageView CreateImageView(VkImage image, VkFormat format);
-
-    VkSampler CreateSampler();
-
-    VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
-
     void DestroyImageView(VkImageView imageView);
 
+    VkSampler CreateSampler();
     void DestroySampler(VkSampler sampler);
 
+    VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
     void DestroyTextureDescriptorSet(VkDescriptorSet descriptorSet);
-
-    void DestroyImage(BoundImage image);
 
     void WaitUntilDeviceIdle();
 

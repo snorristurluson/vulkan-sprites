@@ -1,14 +1,12 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
 #include <memory>
-
 //
+
 // Created by Snorri Sturluson on 20/08/2018.
 //
-
 #include "Renderer.h"
 
 #include <iostream>
+
 #include <fstream>
 #include <vector>
 #include <set>
@@ -18,7 +16,9 @@
 #include "Vertex.h"
 
 #pragma clang diagnostic push
+
 #pragma clang diagnostic ignored "-Wreturn-stack-address"
+#pragma ide diagnostic ignored "cert-err58-cpp"
 
 #define MAX_NUM_TEXTURES 256
 #define UNUSED(x) (void(x))
@@ -177,6 +177,12 @@ namespace {
         glm::mat4 view;
         glm::mat4 proj;
     };
+}
+
+Renderer::~Renderer() {
+    if (m_isInitialized) {
+        cleanup();
+    }
 }
 
 bool Renderer::IsInitialized() { return m_isInitialized; }
@@ -1099,22 +1105,16 @@ void Renderer::createSyncObjects() {
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
-        if(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS) {
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create semaphore for frame");
         }
-        if(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
+        if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create semaphore for frame");
         }
-        if(vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
+        if (vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create fence for frame");
         }
-    }
-}
-
-Renderer::~Renderer() {
-    if(m_isInitialized) {
-        cleanup();
     }
 }
 
@@ -1130,7 +1130,7 @@ void Renderer::cleanup() {
 
     vkDestroyDevice(m_device, nullptr);
 
-    if(m_enableValidationLayers) {
+    if (m_enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(m_instance, m_callback, nullptr);
     }
 
@@ -1138,13 +1138,13 @@ void Renderer::cleanup() {
 }
 
 void Renderer::cleanupSwapChain() {
-    for(auto framebuffer: m_swapChainFramebuffers) {
+    for (auto framebuffer: m_swapChainFramebuffers) {
         vkDestroyFramebuffer(m_device, framebuffer, nullptr);
     }
 
-    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
-        auto& perFrameCmds = m_perFrameCommandBuffer[i];
-        if(!perFrameCmds.empty()) {
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+        auto &perFrameCmds = m_perFrameCommandBuffer[i];
+        if (!perFrameCmds.empty()) {
             vkFreeCommandBuffers(m_device, m_perFrameCommandPool[i], perFrameCmds.size(), perFrameCmds.data());
             perFrameCmds.clear();
         }
@@ -1154,7 +1154,7 @@ void Renderer::cleanupSwapChain() {
     vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
 
-    for(auto imageView: m_swapChainImageViews) {
+    for (auto imageView: m_swapChainImageViews) {
         vkDestroyImageView(m_device, imageView, nullptr);
     }
 
@@ -1162,7 +1162,7 @@ void Renderer::cleanupSwapChain() {
 }
 
 void Renderer::cleanupSyncObjects() {
-    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
         vkDestroySemaphore(m_device, m_imageAvailableSemaphores[i], nullptr);
         vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
         vkDestroyFence(m_device, m_inFlightFences[i], nullptr);
@@ -1170,7 +1170,7 @@ void Renderer::cleanupSyncObjects() {
 }
 
 void Renderer::cleanupUniformBuffers() {
-    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
         vkDestroyBuffer(m_device, m_uniformBuffers[i].buffer, nullptr);
         vkFreeMemory(m_device, m_uniformBuffers[i].bufferMemory, nullptr);
     }
@@ -1179,7 +1179,7 @@ void Renderer::cleanupUniformBuffers() {
 void Renderer::cleanupCommandPools() {
     vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 
-    for(size_t i = 0; i < getMaxFramesInFlight(); ++i) {
+    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
         vkDestroyCommandPool(m_device, m_perFrameCommandPool[i], nullptr);
     }
 }
@@ -1204,8 +1204,8 @@ void Renderer::WaitUntilDeviceIdle() {
 bool Renderer::StartFrame() {
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
-    auto& perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
-    if(!perFrameCmds.empty()) {
+    auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
+    if (!perFrameCmds.empty()) {
         vkFreeCommandBuffers(m_device, m_perFrameCommandPool[m_currentFrame], perFrameCmds.size(), &perFrameCmds[0]);
         perFrameCmds.clear();
     }
@@ -1218,10 +1218,10 @@ bool Renderer::StartFrame() {
             VK_NULL_HANDLE,
             &m_nextFrame);
 
-    if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapChain();
         return false;
-    } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
@@ -1232,7 +1232,7 @@ bool Renderer::StartFrame() {
     allocInfo.commandBufferCount = 1;
 
     perFrameCmds.resize(1);
-    if(vkAllocateCommandBuffers(m_device, &allocInfo, perFrameCmds.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(m_device, &allocInfo, perFrameCmds.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffer");
     }
 
@@ -1242,7 +1242,7 @@ bool Renderer::StartFrame() {
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-    if(vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer");
     }
 
@@ -1260,11 +1260,11 @@ bool Renderer::StartFrame() {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
     vkCmdBindDescriptorSets(commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_pipelineLayout,
-            0, 1,
-            &m_perFrameDescriptorSets[m_currentFrame],
-            0, nullptr);
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipelineLayout,
+                            0, 1,
+                            &m_perFrameDescriptorSets[m_currentFrame],
+                            0, nullptr);
 
     return true;
 }
@@ -1272,7 +1272,7 @@ bool Renderer::StartFrame() {
 void Renderer::recreateSwapChain() {
     int width = 0;
     int height = 0;
-    while(width == 0 || height == 0) {
+    while (width == 0 || height == 0) {
         glfwGetFramebufferSize(m_window, &width, &height);
         glfwWaitEvents();
     }
@@ -1288,12 +1288,12 @@ void Renderer::recreateSwapChain() {
 }
 
 void Renderer::EndFrame() {
-    auto& perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
+    auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     auto commandBuffer = perFrameCmds[0];
 
     vkCmdEndRenderPass(commandBuffer);
 
-    if(vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer");
     }
 
@@ -1314,7 +1314,7 @@ void Renderer::EndFrame() {
 
     vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
-    if(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
+    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit command buffer");
     }
 
@@ -1330,9 +1330,9 @@ void Renderer::EndFrame() {
 
     auto result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
 
-    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         recreateSwapChain();
-    } else if(result != VK_SUCCESS) {
+    } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image");
     }
     m_currentFrame = m_nextFrame;
@@ -1350,6 +1350,4 @@ void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
 
 }
 
-
-#pragma clang diagnostic pop
 #pragma clang diagnostic pop
