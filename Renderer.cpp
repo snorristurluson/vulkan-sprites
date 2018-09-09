@@ -1168,6 +1168,8 @@ void Renderer::cleanupSwapChain() {
         }
     }
 
+    m_currentCommandBuffer = nullptr;
+
     vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
@@ -1251,11 +1253,7 @@ bool Renderer::StartFrame() {
 }
 
 void Renderer::EndFrame() {
-
-    auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
-    auto commandBuffer = perFrameCmds[0];
-
-    copyStagingBuffersToDevice(commandBuffer);
+    copyStagingBuffersToDevice(m_currentCommandBuffer);
     unmapStagingBuffers();
 
     int width, height;
@@ -1278,9 +1276,9 @@ void Renderer::EndFrame() {
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &m_clearColor;
 
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
     VkDescriptorSet ds;
     if(m_currentTexture) {
@@ -1292,7 +1290,7 @@ void Renderer::EndFrame() {
             m_perFrameDescriptorSets[m_currentFrame],
             ds
     };
-    vkCmdBindDescriptorSets(commandBuffer,
+    vkCmdBindDescriptorSets(m_currentCommandBuffer,
                             VK_PIPELINE_BIND_POINT_GRAPHICS,
                             m_pipelineLayout,
                             0,
@@ -1303,14 +1301,14 @@ void Renderer::EndFrame() {
     VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
     VkDeviceSize offsets[] = {0};
 
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
 
-    vkCmdDrawIndexed(commandBuffer, m_numIndices, 1, 0, 0, 0);
+    vkCmdDrawIndexed(m_currentCommandBuffer, m_numIndices, 1, 0, 0, 0);
 
-    vkCmdEndRenderPass(commandBuffer);
+    vkCmdEndRenderPass(m_currentCommandBuffer);
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(m_currentCommandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer");
     }
 
@@ -1323,7 +1321,7 @@ void Renderer::EndFrame() {
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.pCommandBuffers = &m_currentCommandBuffer;
 
     VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
@@ -1334,6 +1332,8 @@ void Renderer::EndFrame() {
     if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit command buffer");
     }
+
+    m_currentCommandBuffer = nullptr;
 
     VkSwapchainKHR swapChains[] = {m_swapChain};
 
@@ -1403,13 +1403,13 @@ void Renderer::startMainCommandBuffer() {
         throw std::runtime_error("failed to allocate command buffer");
     }
 
-    auto commandBuffer = perFrameCmds[0];
+    m_currentCommandBuffer = perFrameCmds[0];
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(m_currentCommandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer");
     }
 }

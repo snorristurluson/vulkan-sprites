@@ -115,6 +115,7 @@ protected:
     VkCommandPool m_commandPool;
     std::vector<VkCommandPool> m_perFrameCommandPool;
     std::vector<std::vector<VkCommandBuffer>> m_perFrameCommandBuffer;
+    VkCommandBuffer m_currentCommandBuffer;
 
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_perFrameDescriptorSets;
