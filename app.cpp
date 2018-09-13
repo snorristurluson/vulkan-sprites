@@ -35,9 +35,9 @@ void App::Run()
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
-            r.SetTexture(t);
             r.DrawSprite(0, 0, 100, 100);
             r.DrawSprite(200, 200, 200, 200);
+            r.SetTexture(t);
             r.DrawSprite(300, 300, 300, 300);
             r.EndFrame();
         }

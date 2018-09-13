@@ -1249,7 +1249,6 @@ bool Renderer::StartFrame() {
 
     startMainCommandBuffer();
     updateUniformBuffer();
-    bindTexture();
 
     mapStagingBufferMemory();
 
@@ -1257,6 +1256,8 @@ bool Renderer::StartFrame() {
 }
 
 void Renderer::EndFrame() {
+    queueDrawCommand();
+
     copyStagingBuffersToDevice(m_currentCommandBuffer);
     unmapStagingBuffers();
 
@@ -1271,7 +1272,30 @@ void Renderer::EndFrame() {
 
     vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    issueDrawCommand();
+    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
+    VkDeviceSize offsets[] = {0};
+
+    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
+
+    for(auto& cmd: m_drawCommands) {
+        std::array<VkDescriptorSet, 2> descriptorSets = {
+                m_perFrameDescriptorSets[m_currentFrame],
+                cmd.texture->GetDescriptorSet()
+        };
+        vkCmdBindDescriptorSets(m_currentCommandBuffer,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_pipelineLayout,
+                                0,
+                                descriptorSets.size(),
+                                descriptorSets.data(),
+                                0, nullptr);
+
+        vkCmdDrawIndexed(m_currentCommandBuffer, cmd.numIndices, 1, cmd.baseIndex, 0, 0);
+
+    }
+    m_numDrawCommands = m_drawCommands.size();
+    m_drawCommands.clear();
 
     vkCmdEndRenderPass(m_currentCommandBuffer);
 
@@ -1317,7 +1341,7 @@ void Renderer::EndFrame() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
-        //throw std::runtime_error("failed to present swap chain image");
+        throw std::runtime_error("failed to present swap chain image");
     }
     m_currentFrame = m_nextFrame;
 }
@@ -1334,32 +1358,6 @@ void Renderer::updateUniformBuffer() const
     vkMapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory, 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
     vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
-}
-
-void Renderer::bindTexture() const
-{
-    std::array<VkDescriptorSet, 2> descriptorSets = {
-            m_perFrameDescriptorSets[m_currentFrame],
-            m_currentTexture->GetDescriptorSet()
-    };
-    vkCmdBindDescriptorSets(m_currentCommandBuffer,
-                            VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipelineLayout,
-                            0,
-                            descriptorSets.size(),
-                            descriptorSets.data(),
-                            0, nullptr);
-}
-
-void Renderer::issueDrawCommand() const
-{
-    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
-    VkDeviceSize offsets[] = {0};
-
-    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
-
-    vkCmdDrawIndexed(m_currentCommandBuffer, m_numIndices, 1, 0, 0, 0);
 }
 
 void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
@@ -1438,6 +1436,9 @@ void Renderer::mapStagingBufferMemory() {
     m_currentVertexWrite = m_vertexWriteStart;
 
     m_numIndices = 0;
+    m_indexOffset = 0;
+    m_numVertices = 0;
+    m_vertexOffset = 0;
 }
 
 void Renderer::recreateSwapChain() {
@@ -1506,6 +1507,7 @@ void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
     *m_currentIndexWrite++ = static_cast<uint16_t>(base + 2);
 
     m_numIndices += 6;
+    m_numVertices += 4;
 }
 
 void Renderer::createIndexAndVertexBuffers() {
@@ -1571,10 +1573,22 @@ VkDeviceSize Renderer::GetNumVertices() {
 }
 
 void Renderer::SetTexture(std::shared_ptr<Texture> texture) {
+    queueDrawCommand();
     m_currentTexture = texture;
-    bindTexture();
+}
 
-    // todo Changing texture needs to trigger a draw cmd
+void Renderer::queueDrawCommand() {
+    if(m_numIndices > 0) {
+        m_drawCommands.emplace_back(m_currentTexture, m_indexOffset, m_numIndices);
+        m_indexOffset += m_numIndices;
+        m_numIndices = 0;
+        m_vertexOffset += m_numVertices;
+        m_numVertices = 0;
+    }
+}
+
+int Renderer::GetNumDrawCommands() {
+    return m_numDrawCommands;
 }
 
 #pragma clang diagnostic pop

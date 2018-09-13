@@ -81,6 +81,8 @@ public:
 
     void SetTexture(std::shared_ptr<Texture> texture);
 
+    int GetNumDrawCommands();
+
 protected:
     GLFWwindow *m_window;
 
@@ -142,10 +144,27 @@ protected:
     Vertex* m_currentVertexWrite;
     Vertex* m_vertexWriteEnd;
 
-    uint32_t m_numIndices;
+    uint16_t m_numIndices;
+    uint16_t m_indexOffset;
+    uint16_t m_numVertices;
+    uint16_t m_vertexOffset;
 
     std::shared_ptr<Texture> m_defaultTexture;
     std::shared_ptr<Texture> m_currentTexture;
+
+    struct DrawCommand {
+        DrawCommand(std::shared_ptr<Texture> t, uint16_t bi, uint16_t ni) :
+            texture(t),
+            baseIndex(bi),
+            numIndices(ni)
+        {}
+        std::shared_ptr<Texture> texture;
+        uint16_t baseIndex;
+        uint16_t numIndices;
+    };
+
+    std::vector<DrawCommand> m_drawCommands;
+    int m_numDrawCommands;
 
 protected:
     void createInstance();
@@ -243,11 +262,9 @@ protected:
 
     void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const;
 
-    void issueDrawCommand() const;
-
-    void bindTexture() const;
-
     void updateUniformBuffer() const;
+
+    void queueDrawCommand();
 };
 
 

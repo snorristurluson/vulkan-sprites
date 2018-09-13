@@ -68,6 +68,7 @@ TEST_F(RendererTest, StartFrame) {
     r.StartFrame();
     r.EndFrame();
     r.WaitUntilDeviceIdle();
+    EXPECT_EQ(r.GetNumDrawCommands(), 0);
 
     // TODO ensure validation log is empty
 }
@@ -99,6 +100,21 @@ TEST_F(RendererTest, DrawSprite) {
     r.EndFrame();
     r.WaitUntilDeviceIdle();
 
+    EXPECT_EQ(r.GetNumDrawCommands(), 1);
+    // TODO ensure validation log is empty
+}
+
+TEST_F(RendererTest, DrawSprite_MultipleSpritesOneDrawCommand) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    r.StartFrame();
+    r.DrawSprite(0, 0, 100, 100);
+    r.DrawSprite(10, 10, 100, 100);
+    r.DrawSprite(20, 20, 100, 100);
+    r.EndFrame();
+    r.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(r.GetNumDrawCommands(), 1);
     // TODO ensure validation log is empty
 }
 
@@ -114,5 +130,22 @@ TEST_F(RendererTest, SetTexture) {
     r.EndFrame();
     r.WaitUntilDeviceIdle();
 
+    // TODO ensure validation log is empty
+}
+
+TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+
+    auto t = r.CreateTexture("resources/texture.jpg");
+
+    r.StartFrame();
+    r.DrawSprite(0, 0, 100, 100);
+    r.SetTexture(t);
+    r.DrawSprite(10, 10, 100, 100);
+    r.EndFrame();
+    r.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(r.GetNumDrawCommands(), 2);
     // TODO ensure validation log is empty
 }
