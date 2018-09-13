@@ -1245,7 +1245,7 @@ bool Renderer::StartFrame() {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
-    m_currentTexture.reset();
+    m_currentTexture = m_defaultTexture;
 
     startMainCommandBuffer();
     updateUniformBuffer();
@@ -1338,15 +1338,9 @@ void Renderer::updateUniformBuffer() const
 
 void Renderer::bindTexture() const
 {
-    VkDescriptorSet ds;
-    if(m_currentTexture) {
-        ds = m_currentTexture->GetDescriptorSet();
-    } else {
-        ds = m_defaultTexture->GetDescriptorSet();
-    }
     std::array<VkDescriptorSet, 2> descriptorSets = {
             m_perFrameDescriptorSets[m_currentFrame],
-            ds
+            m_currentTexture->GetDescriptorSet()
     };
     vkCmdBindDescriptorSets(m_currentCommandBuffer,
                             VK_PIPELINE_BIND_POINT_GRAPHICS,
