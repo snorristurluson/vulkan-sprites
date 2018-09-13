@@ -1245,7 +1245,11 @@ bool Renderer::StartFrame() {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
+    m_currentTexture.reset();
+
     startMainCommandBuffer();
+    updateUniformBuffer();
+    bindTexture();
 
     mapStagingBufferMemory();
 
@@ -1255,17 +1259,6 @@ bool Renderer::StartFrame() {
 void Renderer::EndFrame() {
     copyStagingBuffersToDevice(m_currentCommandBuffer);
     unmapStagingBuffers();
-
-    int width, height;
-    glfwGetFramebufferSize(m_window, &width, &height);
-    UniformBufferObject ubo = {};
-    ubo.extent.x = width;
-    ubo.extent.y = height;
-
-    void* data;
-    vkMapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory, 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
 
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1278,33 +1271,7 @@ void Renderer::EndFrame() {
 
     vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-
-    VkDescriptorSet ds;
-    if(m_currentTexture) {
-        ds = m_currentTexture->GetDescriptorSet();
-    } else {
-        ds = m_defaultTexture->GetDescriptorSet();
-    }
-    std::array<VkDescriptorSet, 2> descriptorSets = {
-            m_perFrameDescriptorSets[m_currentFrame],
-            ds
-    };
-    vkCmdBindDescriptorSets(m_currentCommandBuffer,
-                            VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipelineLayout,
-                            0,
-                            descriptorSets.size(),
-                            descriptorSets.data(),
-                            0, nullptr);
-
-    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
-    VkDeviceSize offsets[] = {0};
-
-    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
-
-    vkCmdDrawIndexed(m_currentCommandBuffer, m_numIndices, 1, 0, 0, 0);
+    issueDrawCommand();
 
     vkCmdEndRenderPass(m_currentCommandBuffer);
 
@@ -1350,9 +1317,55 @@ void Renderer::EndFrame() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swap chain image");
+        //throw std::runtime_error("failed to present swap chain image");
     }
     m_currentFrame = m_nextFrame;
+}
+
+void Renderer::updateUniformBuffer() const
+{
+    int width, height;
+    glfwGetFramebufferSize(m_window, &width, &height);
+    UniformBufferObject ubo = {};
+    ubo.extent.x = width;
+    ubo.extent.y = height;
+
+    void* data;
+    vkMapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory, 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
+}
+
+void Renderer::bindTexture() const
+{
+    VkDescriptorSet ds;
+    if(m_currentTexture) {
+        ds = m_currentTexture->GetDescriptorSet();
+    } else {
+        ds = m_defaultTexture->GetDescriptorSet();
+    }
+    std::array<VkDescriptorSet, 2> descriptorSets = {
+            m_perFrameDescriptorSets[m_currentFrame],
+            ds
+    };
+    vkCmdBindDescriptorSets(m_currentCommandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipelineLayout,
+                            0,
+                            descriptorSets.size(),
+                            descriptorSets.data(),
+                            0, nullptr);
+}
+
+void Renderer::issueDrawCommand() const
+{
+    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
+    VkDeviceSize offsets[] = {0};
+
+    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
+
+    vkCmdDrawIndexed(m_currentCommandBuffer, m_numIndices, 1, 0, 0, 0);
 }
 
 void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
@@ -1412,6 +1425,8 @@ void Renderer::startMainCommandBuffer() {
     if (vkBeginCommandBuffer(m_currentCommandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer");
     }
+
+    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 }
 
 void Renderer::mapStagingBufferMemory() {
@@ -1563,6 +1578,7 @@ VkDeviceSize Renderer::GetNumVertices() {
 
 void Renderer::SetTexture(std::shared_ptr<Texture> texture) {
     m_currentTexture = texture;
+    bindTexture();
 
     // todo Changing texture needs to trigger a draw cmd
 }

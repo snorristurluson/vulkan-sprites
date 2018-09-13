@@ -242,6 +242,12 @@ protected:
     void unmapStagingBuffers();
 
     void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const;
+
+    void issueDrawCommand() const;
+
+    void bindTexture() const;
+
+    void updateUniformBuffer() const;
 };
 
 
