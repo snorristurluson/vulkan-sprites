@@ -1430,10 +1430,12 @@ void Renderer::mapStagingBufferMemory() {
     vkMapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory, 0, indexBufferSize, 0, &data);
     m_indexWriteStart = reinterpret_cast<uint16_t*>(data);
     m_currentIndexWrite = m_indexWriteStart;
+    m_indexWriteEnd =  m_indexWriteStart + getMaxNumIndices();
 
     vkMapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory, 0, vertexBufferSize, 0, &data);
     m_vertexWriteStart = reinterpret_cast<Vertex*>(data);
     m_currentVertexWrite = m_vertexWriteStart;
+    m_vertexWriteEnd = m_vertexWriteStart + getMaxNumVertices();
 
     m_numIndices = 0;
     m_indexOffset = 0;
@@ -1473,6 +1475,12 @@ void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
     }
     if(!m_currentVertexWrite) {
         throw std::runtime_error("vertex write destination is null");
+    }
+    if(m_currentVertexWrite + 4 >= m_vertexWriteEnd) {
+        throw std::runtime_error("vertex buffer full");
+    }
+    if(m_currentIndexWrite + 6 >= m_indexWriteEnd) {
+        throw std::runtime_error("index buffer full");
     }
 
     // TODO guard against buffer overflow
@@ -1557,11 +1565,11 @@ void Renderer::cleanupIndexAndVertexBuffers() {
 }
 
 VkDeviceSize Renderer::getMaxNumIndices() {
-    return 16384;
+    return 64*1024;
 }
 
 VkDeviceSize Renderer::getMaxNumVertices() {
-    return 16384;
+    return 64*1024;
 }
 
 VkDeviceSize Renderer::GetNumIndices() {
