@@ -71,7 +71,7 @@ public:
 
     void EndFrame();
 
-    void DrawSprite(int x, int y, uint32_t width, uint32_t height);
+    void DrawSprite(float x, float y, float width, float height);
 
     VkDeviceSize GetNumIndices();
     VkDeviceSize GetNumVertices();

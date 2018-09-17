@@ -26,6 +26,15 @@ public:
 protected:
     GLFWwindow *m_window;
     bool m_framebufferResized;
+
+    int m_width;
+    int m_height;
+
+    float m_x;
+    float m_y;
+
+    float m_dx;
+    float m_vx;
 };
 
 #endif //VULKAN_SPRITES_APP_H

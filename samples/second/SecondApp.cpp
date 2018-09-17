@@ -15,7 +15,12 @@ namespace {
     }
 }
 
-SecondApp::SecondApp() : m_window(nullptr)
+SecondApp::SecondApp() :
+    m_window(nullptr),
+    m_x(0),
+    m_y(0.0f),
+    m_dx(0.0f),
+    m_vx(0.2f)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -24,6 +29,16 @@ SecondApp::SecondApp() : m_window(nullptr)
 void SecondApp::CreateWindow(int width, int height)
 {
     m_window = glfwCreateWindow(width, height, "Second", nullptr, nullptr);
+
+    glfwGetFramebufferSize(m_window, &m_width, &m_height);
+
+    m_width *= 2;
+    m_height *= 2;
+
+    m_x = m_width / 2;
+    m_y = m_height - 16;
+    m_dx = 0.0f;
+
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
     glfwSetKeyCallback(m_window, keyCallback);
@@ -41,10 +56,19 @@ void SecondApp::Run()
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
-        glfwPollEvents();
+        m_x += m_dx * m_vx;
+        if(m_x < 0.0f) {
+            m_x = 0.0f;
+        }
+        if(m_x > m_width) {
+            m_x = m_width;
+        }
         if(r.StartFrame()) {
+            r.DrawSprite(m_x - 32, m_y, 64, 16);
             r.EndFrame();
         }
+
+        glfwPollEvents();
     }
     r.WaitUntilDeviceIdle();
 }
@@ -55,5 +79,21 @@ GLFWwindow *SecondApp::GetWindow()
 }
 
 void SecondApp::HandleKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    std::cout << "HandleKey" << key << scancode << action << mods << std::endl;
+    switch(key) {
+        case GLFW_KEY_Z:
+            if(action == GLFW_PRESS) {
+                m_dx = -1.0f;
+            } else if(action == GLFW_RELEASE) {
+                m_dx = 0.0f;
+            }
+            break;
+
+        case GLFW_KEY_X:
+            if(action == GLFW_PRESS) {
+                m_dx = 1.0f;
+            } else if(action == GLFW_RELEASE) {
+                m_dx = 0.0f;
+            }
+            break;
+    }
 }

@@ -1469,7 +1469,7 @@ void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
     Renderer::m_clearColor = m_clearColor;
 }
 
-void Renderer::DrawSprite(int x, int y, uint32_t width, uint32_t height) {
+void Renderer::DrawSprite(float x, float y, float width, float height) {
     if(!m_currentIndexWrite) {
         throw std::runtime_error("index write destination is null");
     }
