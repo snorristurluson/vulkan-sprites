@@ -49,56 +49,25 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
         ${CMAKE_BINARY_DIR}/googletest-build
         EXCLUDE_FROM_ALL)
 
+add_subdirectory(engine)
+
 add_executable(
-        vulkan-sprites
-        main.cpp
-        app.cpp app.h
-        Renderer.cpp Renderer.h
-        Vertex.cpp Vertex.h
-        Texture.cpp Texture.h
-        stb_image.h
-        ShaderLib.cpp ShaderLib.h
+        first
+        samples/first/main.cpp
+        samples/first/FirstApp.cpp samples/first/FirstApp.h
 )
+target_link_libraries(first engine)
+
+add_executable(
+        second
+        samples/second/main.cpp
+        samples/second/SecondApp.cpp samples/second/SecondApp.h)
+target_link_libraries(second engine)
 
 add_executable(
         Renderer_test
-        Renderer_test.cpp
-        Renderer.cpp Renderer.h
-        Texture.cpp Texture.h
-        ShaderLib.cpp ShaderLib.h
+        engine/Renderer_test.cpp
 )
-
+target_link_libraries(Renderer_test engine)
 target_link_libraries(Renderer_test gtest_main)
 
-# Shaders
-file(GLOB_RECURSE GLSL_SOURCE_FILES
-        "shaders/*.frag"
-        "shaders/*.vert"
-        )
-
-foreach(GLSL ${GLSL_SOURCE_FILES})
-    get_filename_component(FILE_NAME ${GLSL} NAME)
-    set(SPIRV "${PROJECT_BINARY_DIR}/shaders/${FILE_NAME}.spv")
-    add_custom_command(
-            OUTPUT ${SPIRV}
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
-            COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
-            COMMAND cat ${SPIRV} | xxd -i > ${GLSL}.array
-            DEPENDS ${GLSL})
-    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-endforeach(GLSL)
-
-add_custom_target(
-        Shaders
-        DEPENDS ${SPIRV_BINARY_FILES}
-)
-
-add_dependencies(vulkan-sprites Shaders)
-add_dependencies(Renderer_test Shaders)
-
-add_custom_command(TARGET vulkan-sprites PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:vulkan-sprites>/shaders/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_BINARY_DIR}/shaders"
-        "$<TARGET_FILE_DIR:vulkan-sprites>/shaders"
-        )

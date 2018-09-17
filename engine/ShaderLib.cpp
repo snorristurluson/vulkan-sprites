@@ -6,10 +6,10 @@
 
 namespace {
     uint8_t s_vertexShader[] = {
-        #include "shaders/shader.vert.array"
+        #include "../engine/shaders/shader.vert.array"
     };
     uint8_t s_pixelShader[] = {
-        #include "shaders/shader.frag.array"
+        #include "../engine/shaders/shader.frag.array"
     };
 }
 

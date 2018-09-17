@@ -8,10 +8,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-class App
+class FirstApp
 {
 public:
-    App();
+    FirstApp();
 
     void CreateWindow(int width, int height);
     GLFWwindow* GetWindow();
