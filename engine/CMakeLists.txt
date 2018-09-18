@@ -9,8 +9,8 @@ add_library(
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES
-        "engine/shaders/*.frag"
-        "engine/shaders/*.vert"
+        "shaders/*.frag"
+        "shaders/*.vert"
         )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})

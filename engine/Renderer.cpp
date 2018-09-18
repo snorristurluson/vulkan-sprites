@@ -1246,6 +1246,7 @@ bool Renderer::StartFrame() {
     }
 
     m_currentTexture = m_defaultTexture;
+    m_currentColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
     startMainCommandBuffer();
     updateUniformBuffer();
@@ -1483,27 +1484,25 @@ void Renderer::DrawSprite(float x, float y, float width, float height) {
         throw std::runtime_error("index buffer full");
     }
 
-    // TODO guard against buffer overflow
-
     auto base = static_cast<uint16_t>(m_currentVertexWrite - m_vertexWriteStart);
 
     m_currentVertexWrite->pos = {x, y};
-    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {0.0f, 0.0f};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y};
-    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {1.0f, 0.0f};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y + height};
-    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {1.0f, 1.0f};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x, y + height};
-    m_currentVertexWrite->color = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {0.0f, 1.0f};
     ++m_currentVertexWrite;
 
@@ -1597,6 +1596,10 @@ void Renderer::queueDrawCommand() {
 
 int Renderer::GetNumDrawCommands() {
     return m_numDrawCommands;
+}
+
+void Renderer::SetColor(const glm::vec4 &color) {
+    m_currentColor = color;
 }
 
 #pragma clang diagnostic pop

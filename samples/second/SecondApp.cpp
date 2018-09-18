@@ -64,6 +64,9 @@ void SecondApp::Run()
             m_x = m_width;
         }
         if(r.StartFrame()) {
+            r.SetColor({1.0f, 0.0f, 0.0f, 1.0f});
+            r.DrawSprite(64, 32, 64, 32);
+            r.SetColor({1.0f, 1.0f, 1.0f, 1.0f});
             r.DrawSprite(m_x - 32, m_y, 64, 16);
             r.EndFrame();
         }

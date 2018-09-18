@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <memory>
+#include <glm/vec4.hpp>
 
 class Texture;
 class Vertex;
@@ -78,6 +79,8 @@ public:
 
     const VkClearValue &GetClearColor() const;
     void SetClearColor(const VkClearValue &m_clearColor);
+
+    void SetColor(const glm::vec4& color);
 
     void SetTexture(std::shared_ptr<Texture> texture);
 
@@ -151,6 +154,8 @@ protected:
 
     std::shared_ptr<Texture> m_defaultTexture;
     std::shared_ptr<Texture> m_currentTexture;
+
+    glm::vec4 m_currentColor;
 
     struct DrawCommand {
         DrawCommand(std::shared_ptr<Texture> t, uint16_t bi, uint16_t ni) :
