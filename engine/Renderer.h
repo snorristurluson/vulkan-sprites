@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <glm/vec4.hpp>
+#include "DebugMessenger.h"
 
 class Texture;
 class Vertex;
@@ -39,6 +40,8 @@ public:
     bool IsInitialized();
 
     void Initialize(GLFWwindow *window, Renderer::ValidationState validation);
+
+    DebugMessenger* GetDebugMessenger();
 
     std::shared_ptr<Texture> CreateTexture(const std::string &filename);
 
@@ -108,6 +111,7 @@ protected:
 
     bool m_enableValidationLayers;
     VkDebugUtilsMessengerEXT m_callback;
+    std::unique_ptr<DebugMessenger> m_debugMessenger;
 
     VkRenderPass m_renderPass;
 

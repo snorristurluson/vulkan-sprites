@@ -33,18 +33,21 @@ TEST_F(RendererTest, CanCreate) {
 TEST_F(RendererTest, FreshInstanceIsUninitialized) {
     Renderer r;
     EXPECT_FALSE(r.IsInitialized());
+    EXPECT_EQ(r.GetDebugMessenger(), nullptr);
 }
 
 TEST_F(RendererTest, Initialize_DisableValidation) {
     Renderer r;
     r.Initialize(m_window, Renderer::DISABLE_VALIDATION);
     EXPECT_TRUE(r.IsInitialized());
+    EXPECT_EQ(r.GetDebugMessenger(), nullptr);
 }
 
 TEST_F(RendererTest, Initialize_EnableValidation) {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     EXPECT_TRUE(r.IsInitialized());
+    EXPECT_NE(r.GetDebugMessenger(), nullptr);
 }
 
 TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
@@ -69,8 +72,7 @@ TEST_F(RendererTest, StartFrame) {
     r.EndFrame();
     r.WaitUntilDeviceIdle();
     EXPECT_EQ(r.GetNumDrawCommands(), 0);
-
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, DrawSprite_ThrowsOutsideOfFrame) {
@@ -87,7 +89,7 @@ TEST_F(RendererTest, DrawSprite_ThrowsOutsideOfFrame2) {
     ASSERT_THROW(r.DrawSprite(0, 0, 100, 100), std::runtime_error);
     r.WaitUntilDeviceIdle();
 
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, DrawSprite) {
@@ -101,7 +103,7 @@ TEST_F(RendererTest, DrawSprite) {
     r.WaitUntilDeviceIdle();
 
     EXPECT_EQ(r.GetNumDrawCommands(), 1);
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, DrawSprite_MultipleSpritesOneDrawCommand) {
@@ -115,7 +117,7 @@ TEST_F(RendererTest, DrawSprite_MultipleSpritesOneDrawCommand) {
     r.WaitUntilDeviceIdle();
 
     EXPECT_EQ(r.GetNumDrawCommands(), 1);
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, SetTexture) {
@@ -130,7 +132,7 @@ TEST_F(RendererTest, SetTexture) {
     r.EndFrame();
     r.WaitUntilDeviceIdle();
 
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
@@ -147,5 +149,5 @@ TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
     r.WaitUntilDeviceIdle();
 
     EXPECT_EQ(r.GetNumDrawCommands(), 2);
-    // TODO ensure validation log is empty
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }

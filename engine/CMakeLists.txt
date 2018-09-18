@@ -5,7 +5,7 @@ add_library(
         Texture.cpp Texture.h
         stb_image.h
         ShaderLib.cpp ShaderLib.h
-)
+        DebugMessenger.cpp DebugMessenger.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES
