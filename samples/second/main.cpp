@@ -1,11 +1,16 @@
 #include <iostream>
 #include "SecondApp.h"
+
 #include "../../engine/Renderer.h"
+#include "../../engine/Logger.h"
+
+static auto logger = CreateLogger("main");
 
 int main()
 {
+    logger->debug("Starting SecondApp");
+
     SecondApp app;
-    Renderer renderer;
 
     app.CreateWindow(800, 600);
     app.Run();

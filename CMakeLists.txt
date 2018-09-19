@@ -51,18 +51,23 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 
 add_subdirectory(engine)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_executable(
         first
         samples/first/main.cpp
         samples/first/FirstApp.cpp samples/first/FirstApp.h
 )
 target_link_libraries(first engine)
+target_link_libraries(first Threads::Threads)
 
 add_executable(
         second
         samples/second/main.cpp
         samples/second/SecondApp.cpp samples/second/SecondApp.h)
 target_link_libraries(second engine)
+target_link_libraries(second Threads::Threads)
 
 add_executable(
         Renderer_test

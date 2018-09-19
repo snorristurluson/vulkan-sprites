@@ -2,6 +2,7 @@
 #include "ShaderLib.h"
 #include "Texture.h"
 #include "Vertex.h"
+#include "Logger.h"
 
 #include <memory>
 #include <utility>
@@ -21,6 +22,8 @@
 
 
 namespace {
+    auto logger = CreateLogger("renderer");
+
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_LUNARG_standard_validation"
     };
@@ -168,13 +171,14 @@ Renderer::Renderer() :
     m_currentVertexWrite(nullptr),
     m_vertexWriteEnd(nullptr)
 {
-
+    logger->debug("Constructed renderer");
 }
 
 Renderer::~Renderer() {
     if (m_isInitialized) {
         cleanup();
     }
+    logger->debug("Destroyed renderer");
 }
 
 bool Renderer::IsInitialized() { return m_isInitialized; }

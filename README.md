@@ -25,6 +25,12 @@ sudo apt install libglm-dev
 
 ### stb_image
 
+### spdlog
+On Linux:
+```bash
+sudo apt install libspdlog-dev
+```
+
  
 ## Running on Mac
 ```bash
