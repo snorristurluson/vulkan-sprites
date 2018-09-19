@@ -56,6 +56,15 @@ TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
     ASSERT_THROW(r.Initialize(m_window, Renderer::ENABLE_VALIDATION), std::runtime_error);
 }
 
+TEST_F(RendererTest, SetClearColor) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+
+    glm::vec4 color {0.1f, 0.2f, 0.3f, 0.4f};
+    r.SetClearColor(color);
+    auto returned = r.GetClearColor();
+    EXPECT_EQ(returned, color);
+}
 TEST_F(RendererTest, CreateTexture) {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);

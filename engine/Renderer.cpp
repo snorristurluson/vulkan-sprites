@@ -1,19 +1,15 @@
-#include <memory>
-//
-
-// Created by Snorri Sturluson on 20/08/2018.
-//
 #include "Renderer.h"
+#include "ShaderLib.h"
+#include "Texture.h"
+#include "Vertex.h"
 
+#include <memory>
+#include <utility>
 #include <iostream>
-
 #include <fstream>
 #include <vector>
 #include <set>
 #include <cstring>
-#include "ShaderLib.h"
-#include "Texture.h"
-#include "Vertex.h"
 
 #pragma clang diagnostic push
 
@@ -253,7 +249,7 @@ void Renderer::createInstance() {
 }
 
 void Renderer::setupDebugCallback() {
-    m_debugMessenger.reset(new DebugMessenger);
+    m_debugMessenger = std::make_unique<DebugMessenger>();
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -1152,7 +1148,11 @@ void Renderer::cleanupSwapChain() {
     for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
         auto &perFrameCmds = m_perFrameCommandBuffer[i];
         if (!perFrameCmds.empty()) {
-            vkFreeCommandBuffers(m_device, m_perFrameCommandPool[i], perFrameCmds.size(), perFrameCmds.data());
+            vkFreeCommandBuffers(
+                    m_device,
+                    m_perFrameCommandPool[i],
+                    static_cast<uint32_t>(perFrameCmds.size()),
+                    perFrameCmds.data());
             perFrameCmds.clear();
         }
     }
@@ -1215,7 +1215,11 @@ bool Renderer::StartFrame() {
 
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     if (!perFrameCmds.empty()) {
-        vkFreeCommandBuffers(m_device, m_perFrameCommandPool[m_currentFrame], perFrameCmds.size(), &perFrameCmds[0]);
+        vkFreeCommandBuffers(
+                m_device,
+                m_perFrameCommandPool[m_currentFrame],
+                static_cast<uint32_t>(perFrameCmds.size()),
+                &perFrameCmds[0]);
         perFrameCmds.clear();
     }
 
@@ -1258,7 +1262,8 @@ void Renderer::EndFrame() {
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_swapChainExtent;
     renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &m_clearColor;
+    VkClearValue clearValue = {m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a};
+    renderPassInfo.pClearValues = &clearValue;
 
     vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -1451,12 +1456,12 @@ void Renderer::recreateSwapChain() {
     createFramebuffers();
 }
 
-const VkClearValue &Renderer::GetClearColor() const {
+glm::vec4 Renderer::GetClearColor() const {
     return m_clearColor;
 }
 
-void Renderer::SetClearColor(const VkClearValue &m_clearColor) {
-    Renderer::m_clearColor = m_clearColor;
+void Renderer::SetClearColor(const glm::vec4 &clearColor) {
+    m_clearColor = clearColor;
 }
 
 void Renderer::DrawSprite(float x, float y, float width, float height) {
@@ -1570,7 +1575,7 @@ VkDeviceSize Renderer::GetNumVertices() {
 
 void Renderer::SetTexture(std::shared_ptr<Texture> texture) {
     queueDrawCommand();
-    m_currentTexture = texture;
+    m_currentTexture = std::move(texture);
 }
 
 void Renderer::queueDrawCommand() {
@@ -1583,7 +1588,7 @@ void Renderer::queueDrawCommand() {
     }
 }
 
-int Renderer::GetNumDrawCommands() {
+unsigned long Renderer::GetNumDrawCommands() {
     return m_numDrawCommands;
 }
 

@@ -80,14 +80,14 @@ public:
     VkDeviceSize GetNumIndices();
     VkDeviceSize GetNumVertices();
 
-    const VkClearValue &GetClearColor() const;
-    void SetClearColor(const VkClearValue &m_clearColor);
+    glm::vec4 GetClearColor() const;
+    void SetClearColor(const glm::vec4 &clearColor);
 
     void SetColor(const glm::vec4& color);
 
     void SetTexture(std::shared_ptr<Texture> texture);
 
-    int GetNumDrawCommands();
+    unsigned long GetNumDrawCommands();
 
 protected:
     GLFWwindow *m_window;
@@ -137,7 +137,7 @@ protected:
     uint32_t m_currentFrame = 1;
     uint32_t m_nextFrame;
 
-    VkClearValue m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    glm::vec4 m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
     std::vector<BoundBuffer> m_indexBuffers;
     std::vector<BoundBuffer> m_indexStagingBuffers;
@@ -173,7 +173,7 @@ protected:
     };
 
     std::vector<DrawCommand> m_drawCommands;
-    int m_numDrawCommands;
+    unsigned long m_numDrawCommands;
 
 protected:
     void createInstance();
