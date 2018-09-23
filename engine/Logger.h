@@ -93,7 +93,7 @@ public:
 protected:
     Logger* m_logger;
 
-    virtual void _sink_it(const spdlog::details::log_msg& msg) override
+    void sink_it_(const spdlog::details::log_msg& msg) override
     {
         Logger::LogSeverity severity;
         switch(msg.level) {
@@ -113,9 +113,9 @@ protected:
             default:
                 return;
         }
-        m_logger->log(severity, "module", *msg.logger_name, msg.raw.c_str());
+        m_logger->log(severity, "module", *msg.logger_name, msg.raw.data());
     }
-    void _flush() override
+    void flush_() override
     {
     }
 };

@@ -76,3 +76,9 @@ add_executable(
 target_link_libraries(Renderer_test engine)
 target_link_libraries(Renderer_test gtest_main)
 
+add_executable(
+        AreaAllocator_test
+        engine/AreaAllocator_test.cpp
+)
+target_link_libraries(AreaAllocator_test engine)
+target_link_libraries(AreaAllocator_test gtest_main)
