@@ -24,20 +24,20 @@ int AreaAllocator::GetTotalHeight()
 
 Area* AreaAllocator::Allocate(int width, int height)
 {
-    AreaPtrList_t::iterator foundIt = m_freeAreas.end();
+    Area *oldArea = getFreeArea(width, height);
 
-    for(auto it = m_freeAreas.begin(); it != m_freeAreas.end(); ++it) {
-        if((*it)->width >= width && (*it)->height >= height) {
-            foundIt = it;
-            break;
-        }
+    if(!oldArea) {
+        collapseFreeAreas();
+        oldArea = getFreeArea(width, height);
     }
 
-    auto newArea = new Area {(*foundIt)->x, (*foundIt)->y, width, height};
+    if(!oldArea) {
+        return nullptr;
+    }
+
+    auto newArea = new Area {oldArea->x, oldArea->y, width, height};
     m_allocatedAreas.emplace_front(newArea);
 
-    Area* oldArea = *foundIt;
-    m_freeAreas.erase(foundIt);
 
     if(oldArea->width > width) {
         // Add an area to the right of newly allocated area
@@ -54,6 +54,17 @@ Area* AreaAllocator::Allocate(int width, int height)
     return newArea;
 }
 
+Area *AreaAllocator::getFreeArea(int width, int height)
+{
+    Area* oldArea = nullptr;
+    auto foundIt = m_freeAreas.FindArea(width, height);
+    if(foundIt != m_freeAreas.end()) {
+        oldArea = *foundIt;
+        m_freeAreas.erase(foundIt);
+    }
+    return oldArea;
+}
+
 int AreaAllocator::GetFreeAreaCount()
 {
     return m_freeAreas.size();
@@ -64,7 +75,7 @@ int AreaAllocator::GetFreeAreaSize()
     return accumulateAreaSize(m_freeAreas);
 }
 
-int AreaAllocator::accumulateAreaSize(const AreaPtrList_t &areaList) const
+int AreaAllocator::accumulateAreaSize(const AreaList &areaList) const
 {
     int size = 0;
     for(const auto& area: areaList) {
@@ -87,4 +98,53 @@ void AreaAllocator::Free(Area *area)
 {
     m_allocatedAreas.remove(area);
     m_freeAreas.emplace_back(area);
+}
+
+int AreaAllocator::GetTotalAreaSize()
+{
+    return m_width * m_height;
+}
+
+void AreaAllocator::collapseFreeAreas()
+{
+    if( m_freeAreas.size() < 2 )
+    {
+        return;
+    }
+
+    int collapsed = 0;
+    do {
+        collapsed = 0;
+        AreaList collapsedAreas;
+        while(!m_freeAreas.empty()) {
+            auto first = m_freeAreas.front();
+            m_freeAreas.pop_front();
+            while(!m_freeAreas.empty()) {
+                auto other = m_freeAreas.FindAdjacent(*first);
+                if(other != m_freeAreas.end()) {
+                    first->CombineWith(**other);
+                    delete *other;
+                    m_freeAreas.erase(other);
+                    ++collapsed;
+                } else {
+                    break;
+                }
+            }
+            collapsedAreas.emplace_back(first);
+        }
+        m_freeAreas = collapsedAreas;
+    } while(collapsed > 0);
+}
+
+bool AreaAllocator::canCombineLeftRight(const Area *first, const Area *second) const
+{
+    bool canCombineLeftRight = false;
+    if(first->y && second->y) {
+        if(first->height == second->height) {
+            if(first->x + first->width == second->x) {
+                canCombineLeftRight = true;
+            }
+        }
+    }
+    return canCombineLeftRight;
 }

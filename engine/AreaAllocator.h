@@ -6,15 +6,8 @@
 #define VULKAN_SPRITES_AREAALLOCATOR_H
 
 #include <list>
-
-struct Area {
-    int x;
-    int y;
-    int width;
-    int height;
-};
-
-typedef std::list<Area*> AreaPtrList_t;
+#include "Area.h"
+#include "AreaList.h"
 
 // AreaAllocator allocates areas from a two-dimensional field. This serves as the basis for a texture
 // atlas - this class focuses on the allocation and de-allocation of the areas, not concerning itself
@@ -26,6 +19,7 @@ public:
 
     int GetTotalWidth();
     int GetTotalHeight();
+    int GetTotalAreaSize();
     int GetFreeAreaCount();
     int GetFreeAreaSize();
     int GetAllocatedAreaCount();
@@ -39,10 +33,16 @@ protected:
     int m_width;
     int m_height;
 
-    AreaPtrList_t m_freeAreas;
-    AreaPtrList_t m_allocatedAreas;
+    AreaList m_freeAreas;
+    AreaList m_allocatedAreas;
 
-    int accumulateAreaSize(const AreaPtrList_t &areaList) const;
+    int accumulateAreaSize(const AreaList &areaList) const;
+
+    Area *getFreeArea(int width, int height);
+
+    void collapseFreeAreas();
+
+    bool canCombineLeftRight(const Area *first, const Area *second) const;
 };
 
 
