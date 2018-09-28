@@ -65,20 +65,18 @@ target_link_libraries(first Threads::Threads)
 add_executable(
         second
         samples/second/main.cpp
-        samples/second/SecondApp.cpp samples/second/SecondApp.h)
+        samples/second/SecondApp.cpp
+        samples/second/SecondApp.h
+)
 target_link_libraries(second engine)
 target_link_libraries(second Threads::Threads)
 
 add_executable(
         Renderer_test
+        engine/Area_test.cpp
+        engine/AreaAllocator_test.cpp
+        engine/AreaList_test.cpp
         engine/Renderer_test.cpp
 )
 target_link_libraries(Renderer_test engine)
 target_link_libraries(Renderer_test gtest_main)
-
-add_executable(
-        AreaAllocator_test
-        engine/AreaAllocator_test.cpp
-        engine/AreaList_test.cpp engine/Area_test.cpp)
-target_link_libraries(AreaAllocator_test engine)
-target_link_libraries(AreaAllocator_test gtest_main)
