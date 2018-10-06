@@ -160,3 +160,17 @@ TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
     EXPECT_EQ(r.GetNumDrawCommands(), 2);
     EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
+
+TEST_F(RendererTest, CreateTexture_InFrame) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+    r.StartFrame();
+    auto t = r.CreateTexture("resources/texture.jpg");
+    r.EndFrame();
+    r.WaitUntilDeviceIdle();
+
+    ASSERT_NE(t.get(), nullptr);
+    EXPECT_EQ(t->GetWidth(), 512);
+    EXPECT_EQ(t->GetHeight(), 512);
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}

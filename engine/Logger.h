@@ -93,7 +93,7 @@ public:
 protected:
     Logger* m_logger;
 
-    void sink_it_(const spdlog::details::log_msg& msg) override
+    void _sink_it(const spdlog::details::log_msg& msg) override
     {
         Logger::LogSeverity severity;
         switch(msg.level) {
@@ -115,7 +115,7 @@ protected:
         }
         m_logger->log(severity, "module", *msg.logger_name, msg.raw.data());
     }
-    void flush_() override
+    void _flush() override
     {
     }
 };
@@ -127,6 +127,6 @@ using LogLiteSink_st = LogLiteSink<spdlog::details::null_mutex>;
 
 #include "spdlog/spdlog.h"
 
-std::shared_ptr<spdlog::logger> CreateLogger(const char* name);
+std::shared_ptr<spdlog::logger> GetLogger(const char *name);
 
 #endif //VULKAN_SPRITES_LOGGER_H

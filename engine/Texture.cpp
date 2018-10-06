@@ -55,7 +55,7 @@ void Texture::init(int width, int height, uint8_t *pixels) {
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_renderer->DestroyBuffer(stagingBuffer);
+    m_renderer->DestroyBufferLater(stagingBuffer);
 
     m_imageView = m_renderer->CreateImageView(m_boundImage.image, format);
     m_sampler = m_renderer->CreateSampler();

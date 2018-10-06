@@ -22,7 +22,7 @@
 
 
 namespace {
-    auto logger = CreateLogger("renderer");
+    auto logger = GetLogger("renderer");
 
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_LUNARG_standard_validation"
@@ -169,7 +169,8 @@ Renderer::Renderer() :
     m_indexWriteEnd(nullptr),
     m_vertexWriteStart(nullptr),
     m_currentVertexWrite(nullptr),
-    m_vertexWriteEnd(nullptr)
+    m_vertexWriteEnd(nullptr),
+    m_currentCommandBuffer(nullptr)
 {
     logger->debug("Constructed renderer");
 }
@@ -212,9 +213,11 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createPerFrameDescriptorSets();
     createSyncObjects();
     createIndexAndVertexBuffers();
+    m_buffersToDestroyAtEndOfFrame.resize(getMaxFramesInFlight());
 
     uint8_t whitePixel[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     m_defaultTexture = std::make_shared<Texture>(this, 1, 1, &whitePixel[0]);
+
 
     m_isInitialized = true;
 }
@@ -895,6 +898,10 @@ void Renderer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkI
 }
 
 VkCommandBuffer Renderer::beginSingleTimeCommands() {
+    if(m_currentCommandBuffer) {
+        return m_currentCommandBuffer;
+    }
+
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -914,6 +921,10 @@ VkCommandBuffer Renderer::beginSingleTimeCommands() {
 }
 
 void Renderer::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    if(commandBuffer == m_currentCommandBuffer) {
+        return;
+    }
+
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo = {};
@@ -1125,6 +1136,7 @@ void Renderer::cleanup() {
     m_defaultTexture.reset();
     m_currentTexture.reset();
 
+    cleanupPendingDestroyBuffers();
     cleanupSwapChain();
     cleanupSyncObjects();
     cleanupUniformBuffers();
@@ -1142,6 +1154,14 @@ void Renderer::cleanup() {
     }
 
     vkDestroyInstance(m_instance, nullptr);
+}
+
+void Renderer::cleanupPendingDestroyBuffers() {
+    for(auto& buffers: m_buffersToDestroyAtEndOfFrame) {
+        for(auto buffer: buffers) {
+            DestroyBuffer(buffer);
+        }
+    }
 }
 
 void Renderer::cleanupSwapChain() {
@@ -1342,6 +1362,11 @@ void Renderer::EndFrame() {
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image");
     }
+
+    for(auto buffer: m_buffersToDestroyAtEndOfFrame[m_nextFrame]) {
+        DestroyBuffer(buffer);
+    }
+
     m_currentFrame = m_nextFrame;
 }
 
@@ -1602,6 +1627,10 @@ void Renderer::SetColor(const glm::vec4 &color) {
 
 DebugMessenger *Renderer::GetDebugMessenger() {
     return m_debugMessenger.get();
+}
+
+void Renderer::DestroyBufferLater(Renderer::BoundBuffer buffer) {
+    m_buffersToDestroyAtEndOfFrame[m_currentFrame].emplace_back(buffer);
 }
 
 #pragma clang diagnostic pop

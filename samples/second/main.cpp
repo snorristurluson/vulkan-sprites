@@ -4,7 +4,7 @@
 #include "../../engine/Renderer.h"
 #include "../../engine/Logger.h"
 
-static auto logger = CreateLogger("main");
+static auto logger = GetLogger("main");
 
 int main()
 {

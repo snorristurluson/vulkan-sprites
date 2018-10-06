@@ -47,6 +47,7 @@ public:
 
     BoundBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
     void DestroyBuffer(BoundBuffer buffer);
+    void DestroyBufferLater(BoundBuffer buffer);
 
     BoundImage CreateImage(
             uint32_t width, uint32_t height,
@@ -175,6 +176,8 @@ protected:
     std::vector<DrawCommand> m_drawCommands;
     unsigned long m_numDrawCommands;
 
+    std::vector<std::vector<BoundBuffer>> m_buffersToDestroyAtEndOfFrame;
+
 protected:
     void createInstance();
     void setupDebugCallback();
@@ -274,6 +277,8 @@ protected:
     void updateUniformBuffer() const;
 
     void queueDrawCommand();
+
+    void cleanupPendingDestroyBuffers();
 };
 
 

@@ -36,6 +36,17 @@ namespace
 
 }
 
+void Logger::connectToHost() {
+    char hostname[1024];
+    gethostname(hostname, 1024);
+
+    char exename[1024];
+    auto result = readlink("/proc/self/exe", exename, 1024);
+    exename[result + 1] = 0;
+
+    connectToHost("127.0.0.1", getpid(), hostname, exename);
+}
+
 void Logger::connectToHost(
         const std::string &server,
         int64_t pid,
@@ -52,9 +63,7 @@ void Logger::connectToHost(
         return;
     }
 
-    struct sockaddr_in serv_addr;
-
-    memset(&serv_addr, '0', sizeof(serv_addr));
+    struct sockaddr_in serv_addr{};
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(0xCC9);
@@ -69,7 +78,7 @@ void Logger::connectToHost(
         return;
     }
 
-    RawLogMessage msg;
+    RawLogMessage msg{};
     msg.type = CONNECTION_MESSAGE;
     msg.connection.pid = m_pid;
     msg.connection.version = 2;
@@ -92,9 +101,9 @@ void Logger::log(
         return;
     }
 
-    RawLogMessage msg;
+    RawLogMessage msg{};
 
-    struct timespec tp;
+    struct timespec tp{};
     clockid_t clk_id = CLOCK_REALTIME;
     clock_gettime(clk_id, &tp);
 
@@ -134,17 +143,6 @@ void Logger::log(
     while (offset < message.size());
 }
 
-void Logger::connectToHost() {
-    char hostname[1024];
-    gethostname(hostname, 1024);
-
-    char exename[1024];
-    auto result = readlink("/proc/self/exe", exename, 1024);
-    exename[result + 1] = 0;
-
-    connectToHost("127.0.0.1", getpid(), hostname, exename);
-}
-
 void Logger::disconnnect() {
     close(m_socket);
     m_state = Disconnected;
@@ -160,9 +158,13 @@ Logger *Logger::instance() {
     return s_instance;
 }
 
-std::shared_ptr<spdlog::logger> CreateLogger(const char *name) {
+std::shared_ptr<spdlog::logger> GetLogger(const char *name) {
+    auto logger = spdlog::get(name);
+    if(logger) {
+        return logger;
+    }
     auto sink = std::make_shared<LogLiteSink_mt>();
-    auto logger = std::make_shared<spdlog::logger>(name, sink);
+    logger = std::make_shared<spdlog::logger>(name, sink);
     logger->set_level(spdlog::level::debug);
     spdlog::register_logger(logger);
     return logger;
