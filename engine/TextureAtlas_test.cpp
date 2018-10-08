@@ -2,6 +2,9 @@
 // Created by snorri on 7.10.2018.
 //
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+
 #include <gtest/gtest.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -20,7 +23,7 @@ protected:
         glfwDestroyWindow(m_window);
     }
 
-    GLFWwindow *m_window;
+    GLFWwindow *m_window{};
 };
 
 TEST_F(TextureAtlasTest, CanCreate) {
@@ -69,3 +72,5 @@ TEST_F(TextureAtlasTest, Add_Two) {
 
     EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
+
+#pragma clang diagnostic pop
