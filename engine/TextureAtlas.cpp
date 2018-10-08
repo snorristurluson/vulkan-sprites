@@ -87,3 +87,7 @@ VkDescriptorSet TextureAtlas::GetDescriptorSet() {
     return m_descriptorSet;
 }
 
+TextureWindow TextureAtlas::GetTextureWindow() {
+    return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
+}
+

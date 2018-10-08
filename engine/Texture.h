@@ -20,7 +20,9 @@ public:
 
     int GetWidth() const;
     int GetHeight() const;
+
     VkDescriptorSet GetDescriptorSet() override;
+    TextureWindow GetTextureWindow() override;
 
 protected:
     Renderer* m_renderer;

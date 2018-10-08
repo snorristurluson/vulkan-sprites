@@ -1140,7 +1140,6 @@ void Renderer::createSyncObjects() {
 
 void Renderer::cleanup() {
     m_defaultTexture.reset();
-    m_currentTexture.reset();
 
     cleanupPendingDestroyBuffers();
     cleanupSwapChain();
@@ -1268,7 +1267,8 @@ bool Renderer::StartFrame() {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
-    m_currentTexture = m_defaultTexture;
+    m_currentDescriptorSet = m_defaultTexture->GetDescriptorSet();
+    m_currentTextureWindow = m_defaultTexture->GetTextureWindow();
     m_currentColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
     startMainCommandBuffer();
@@ -1306,7 +1306,7 @@ void Renderer::EndFrame() {
     for(auto& cmd: m_drawCommands) {
         std::array<VkDescriptorSet, 2> descriptorSets = {
                 m_perFrameDescriptorSets[m_currentFrame],
-                cmd.texture->GetDescriptorSet()
+                cmd.descriptorSet
         };
         vkCmdBindDescriptorSets(m_currentCommandBuffer,
                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1518,22 +1518,22 @@ void Renderer::DrawSprite(float x, float y, float width, float height) {
 
     m_currentVertexWrite->pos = {x, y};
     m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {0.0f, 0.0f};
+    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y0};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y};
     m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {1.0f, 0.0f};
+    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y0};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y + height};
     m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {1.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y1};
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x, y + height};
     m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {0.0f, 1.0f};
+    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y1};
     ++m_currentVertexWrite;
 
     *m_currentIndexWrite++ = base;
@@ -1610,13 +1610,16 @@ VkDeviceSize Renderer::GetNumVertices() {
 }
 
 void Renderer::SetTexture(std::shared_ptr<ITexture> texture) {
-    queueDrawCommand();
-    m_currentTexture = std::move(texture);
+    if(texture->GetDescriptorSet() != m_currentDescriptorSet) {
+        queueDrawCommand();
+        m_currentDescriptorSet = texture->GetDescriptorSet();
+    }
+    m_currentTextureWindow = texture->GetTextureWindow();
 }
 
 void Renderer::queueDrawCommand() {
     if(m_numIndices > 0) {
-        m_drawCommands.emplace_back(m_currentTexture, m_indexOffset, m_numIndices);
+        m_drawCommands.emplace_back(m_currentDescriptorSet, m_indexOffset, m_numIndices);
         m_indexOffset += m_numIndices;
         m_numIndices = 0;
         m_vertexOffset += m_numVertices;

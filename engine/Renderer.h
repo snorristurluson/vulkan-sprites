@@ -163,17 +163,18 @@ protected:
     uint16_t m_vertexOffset;
 
     std::shared_ptr<ITexture> m_defaultTexture;
-    std::shared_ptr<ITexture> m_currentTexture;
+    VkDescriptorSet m_currentDescriptorSet;
+    TextureWindow m_currentTextureWindow;
 
     glm::vec4 m_currentColor;
 
     struct DrawCommand {
-        DrawCommand(std::shared_ptr<ITexture> t, uint16_t bi, uint16_t ni) :
-            texture(t),
+        DrawCommand(VkDescriptorSet ds, uint16_t bi, uint16_t ni) :
+                descriptorSet(ds),
             baseIndex(bi),
             numIndices(ni)
         {}
-        std::shared_ptr<ITexture> texture;
+        VkDescriptorSet descriptorSet;
         uint16_t baseIndex;
         uint16_t numIndices;
     };

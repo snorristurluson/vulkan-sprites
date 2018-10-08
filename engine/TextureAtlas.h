@@ -24,6 +24,7 @@ public:
     std::shared_ptr<AtlasTexture> Add(int width, int height, uint8_t* pixels);
 
     VkDescriptorSet GetDescriptorSet() override;
+    TextureWindow GetTextureWindow() override;
 
 protected:
     int m_width;

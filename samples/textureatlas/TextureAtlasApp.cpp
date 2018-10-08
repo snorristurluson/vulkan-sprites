@@ -31,15 +31,19 @@ void TextureAtlasApp::Run() {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
 
-    auto ta = r.CreateTextureAtlas(256, 256);
-    ta->Add("resources/1.png");
-    ta->Add("resources/2.png");
+    auto ta = r.CreateTextureAtlas(512, 512);
+    auto t1 = ta->Add("freecandybuttons/png/Back (1).png");
+    auto t2 = ta->Add("freecandybuttons/png/Back (2).png");
 
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
         if (r.StartFrame()) {
             r.SetTexture(ta);
             r.DrawSprite(0, 0, 512, 512);
+            r.SetTexture(t1);
+            r.DrawSprite(512, 0, 64, 64);
+            r.SetTexture(t2);
+            r.DrawSprite(512, 64, 64, 64);
             r.EndFrame();
         }
 

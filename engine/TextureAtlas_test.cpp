@@ -45,6 +45,12 @@ TEST_F(TextureAtlasTest, Add_Single) {
     auto at = ta->Add("resources/1.png");
 
     ASSERT_NE(at, nullptr);
+
+    auto tw = at->GetTextureWindow();
+    EXPECT_EQ(tw.x0, 0.0f);
+    EXPECT_EQ(tw.y0, 0.0f);
+    EXPECT_EQ(tw.x1, 0.25f);
+    EXPECT_EQ(tw.y1, 0.25f);
     EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 

@@ -83,3 +83,7 @@ int Texture::GetHeight() const {
 VkDescriptorSet Texture::GetDescriptorSet() {
     return m_descriptorSet;
 }
+
+TextureWindow Texture::GetTextureWindow() {
+    return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
+}

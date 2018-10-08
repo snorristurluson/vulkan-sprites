@@ -5,12 +5,18 @@
 #ifndef VULKAN_SPRITES_ATLASTEXTURE_H
 #define VULKAN_SPRITES_ATLASTEXTURE_H
 
+#include "ITexture.h"
+
 class Area;
 class TextureAtlas;
 
-class AtlasTexture {
+class AtlasTexture : public ITexture {
 public:
     explicit AtlasTexture(TextureAtlas* owner, Area* area);
+
+    VkDescriptorSet GetDescriptorSet() override;
+
+    TextureWindow GetTextureWindow() override;
 
 protected:
     TextureAtlas* m_owner;
