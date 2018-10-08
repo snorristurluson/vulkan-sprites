@@ -12,9 +12,21 @@
 #include <memory>
 #include <glm/vec4.hpp>
 #include "DebugMessenger.h"
+#include "ITexture.h"
 
 class Texture;
+class TextureAtlas;
 class Vertex;
+
+struct BoundImage {
+    VkImage image;
+    VkDeviceMemory imageMemory;
+};
+
+struct BoundBuffer {
+    VkBuffer buffer;
+    VkDeviceMemory bufferMemory;
+};
 
 class Renderer
 {
@@ -22,16 +34,6 @@ public:
     enum ValidationState {
         DISABLE_VALIDATION,
         ENABLE_VALIDATION
-    };
-
-    struct BoundBuffer {
-        VkBuffer buffer;
-        VkDeviceMemory bufferMemory;
-    };
-
-    struct BoundImage {
-        VkImage image;
-        VkDeviceMemory imageMemory;
     };
 
     Renderer();
@@ -45,6 +47,8 @@ public:
 
     std::shared_ptr<Texture> CreateTexture(const std::string &filename);
 
+    std::shared_ptr<TextureAtlas> CreateTextureAtlas(int width, int height);
+
     BoundBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
     void DestroyBuffer(BoundBuffer buffer);
     void DestroyBufferLater(BoundBuffer buffer);
@@ -57,7 +61,8 @@ public:
 
     void CopyToBufferMemory(VkDeviceMemory bufferMemory, uint8_t *data, VkDeviceSize size);
 
-    void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+    void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, int offsetX = 0,
+                           int offsetY = 0);
 
     void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
@@ -86,7 +91,7 @@ public:
 
     void SetColor(const glm::vec4& color);
 
-    void SetTexture(std::shared_ptr<Texture> texture);
+    void SetTexture(std::shared_ptr<ITexture> texture);
 
     unsigned long GetNumDrawCommands();
 
@@ -157,18 +162,18 @@ protected:
     uint16_t m_numVertices;
     uint16_t m_vertexOffset;
 
-    std::shared_ptr<Texture> m_defaultTexture;
-    std::shared_ptr<Texture> m_currentTexture;
+    std::shared_ptr<ITexture> m_defaultTexture;
+    std::shared_ptr<ITexture> m_currentTexture;
 
     glm::vec4 m_currentColor;
 
     struct DrawCommand {
-        DrawCommand(std::shared_ptr<Texture> t, uint16_t bi, uint16_t ni) :
+        DrawCommand(std::shared_ptr<ITexture> t, uint16_t bi, uint16_t ni) :
             texture(t),
             baseIndex(bi),
             numIndices(ni)
         {}
-        std::shared_ptr<Texture> texture;
+        std::shared_ptr<ITexture> texture;
         uint16_t baseIndex;
         uint16_t numIndices;
     };

@@ -4,6 +4,7 @@
 
 #include "FirstApp.h"
 #include "../../engine/Renderer.h"
+#include "../../engine/Texture.h"
 
 #include <string>
 #include <cstdio>

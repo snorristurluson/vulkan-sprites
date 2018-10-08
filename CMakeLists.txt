@@ -72,11 +72,18 @@ target_link_libraries(second engine)
 target_link_libraries(second Threads::Threads)
 
 add_executable(
+        textureatlas
+        samples/textureatlas/main.cpp
+        samples/textureatlas/TextureAtlasApp.cpp samples/textureatlas/TextureAtlasApp.h)
+target_link_libraries(textureatlas engine)
+target_link_libraries(textureatlas Threads::Threads)
+
+add_executable(
         Renderer_test
         engine/Area_test.cpp
         engine/AreaAllocator_test.cpp
         engine/AreaList_test.cpp
         engine/Renderer_test.cpp
-)
+        engine/TextureAtlas_test.cpp)
 target_link_libraries(Renderer_test engine)
 target_link_libraries(Renderer_test gtest_main)

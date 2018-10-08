@@ -10,7 +10,7 @@ add_library(
         AreaAllocator.cpp AreaAllocator.h
         AreaList.cpp AreaList.h
         Area.cpp Area.h
-)
+        TextureAtlas.cpp TextureAtlas.h ITexture.h AtlasTexture.cpp AtlasTexture.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES

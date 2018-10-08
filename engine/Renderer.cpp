@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "ShaderLib.h"
 #include "Texture.h"
+#include "TextureAtlas.h"
 #include "Vertex.h"
 #include "Logger.h"
 
@@ -763,8 +764,13 @@ std::shared_ptr<Texture> Renderer::CreateTexture(const std::string &filename) {
     return std::make_shared<Texture>(this, filename);
 }
 
-Renderer::BoundBuffer
-Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+std::shared_ptr<TextureAtlas> Renderer::CreateTextureAtlas(int width, int height) {
+    auto ta = std::make_shared<TextureAtlas>();
+    ta->Initialize(this, width, height);
+    return ta;
+}
+
+BoundBuffer Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
 
@@ -792,7 +798,7 @@ Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProp
 
     vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
 
-    return Renderer::BoundBuffer{buffer, bufferMemory};
+    return BoundBuffer{buffer, bufferMemory};
 }
 
 uint32_t Renderer::findMemoryType(uint32_t typefilter, VkMemoryPropertyFlags properties) {
@@ -815,8 +821,7 @@ void Renderer::CopyToBufferMemory(VkDeviceMemory bufferMemory, uint8_t *data, Vk
     vkUnmapMemory(m_device, bufferMemory);
 }
 
-Renderer::BoundImage
-Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+BoundImage Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
                       VkMemoryPropertyFlags properties) {
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -853,7 +858,7 @@ Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageT
 
     vkBindImageMemory(m_device, image, imageMemory, 0);
 
-    return Renderer::BoundImage{image, imageMemory};
+    return BoundImage{image, imageMemory};
 }
 
 void Renderer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) {
@@ -938,7 +943,8 @@ void Renderer::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
 }
 
-void Renderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+void Renderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, int offsetX,
+                                 int offsetY) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
     VkBufferImageCopy region = {};
@@ -949,14 +955,14 @@ void Renderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
     region.imageSubresource.mipLevel = 0;
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
-    region.imageOffset = {0, 0, 0};
+    region.imageOffset = {offsetX, offsetY, 0};
     region.imageExtent = {width, height, 1};
 
     vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     endSingleTimeCommands(commandBuffer);
 }
 
-void Renderer::DestroyBuffer(Renderer::BoundBuffer buffer) {
+void Renderer::DestroyBuffer(BoundBuffer buffer) {
     vkDestroyBuffer(m_device, buffer.buffer, nullptr);
     vkFreeMemory(m_device, buffer.bufferMemory, nullptr);
 }
@@ -1225,7 +1231,7 @@ void Renderer::DestroySampler(VkSampler sampler) {
     vkDestroySampler(m_device, sampler, nullptr);
 }
 
-void Renderer::DestroyImage(Renderer::BoundImage image) {
+void Renderer::DestroyImage(BoundImage image) {
     vkDestroyImage(m_device, image.image, nullptr);
     vkFreeMemory(m_device, image.imageMemory, nullptr);
 }
@@ -1603,7 +1609,7 @@ VkDeviceSize Renderer::GetNumVertices() {
     return m_currentVertexWrite - m_vertexWriteStart;
 }
 
-void Renderer::SetTexture(std::shared_ptr<Texture> texture) {
+void Renderer::SetTexture(std::shared_ptr<ITexture> texture) {
     queueDrawCommand();
     m_currentTexture = std::move(texture);
 }
@@ -1630,7 +1636,7 @@ DebugMessenger *Renderer::GetDebugMessenger() {
     return m_debugMessenger.get();
 }
 
-void Renderer::DestroyBufferLater(Renderer::BoundBuffer buffer) {
+void Renderer::DestroyBufferLater(BoundBuffer buffer) {
     m_buffersToDestroyAtEndOfFrame[m_currentFrame].emplace_back(buffer);
 }
 
