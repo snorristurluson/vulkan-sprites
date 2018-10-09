@@ -76,7 +76,7 @@ add_executable(
         samples/textureatlas/main.cpp
         samples/textureatlas/TextureAtlasApp.cpp samples/textureatlas/TextureAtlasApp.h)
 target_link_libraries(textureatlas engine)
-target_link_libraries(textureatlas Threads::Threads)
+target_link_libraries(textureatlas Threads::Threads stdc++fs)
 
 add_executable(
         Renderer_test

@@ -7,21 +7,22 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <string>
 
 class TextureAtlasApp {
 public:
-    TextureAtlasApp();
+    TextureAtlasApp(const std::string& root);
 
     void CreateWindow(int width, int height);
     GLFWwindow* GetWindow();
 
     void Run();
 
-    static void framebufferResizeCallback(GLFWwindow *window, int width, int height);
-
+protected:
     GLFWwindow *m_window;
     int m_width;
     int m_height;
+    std::string m_rootDirectory;
 };
 
 

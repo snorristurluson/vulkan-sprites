@@ -10,11 +10,11 @@
 
 static auto logger = GetLogger("main");
 
-int main()
+int main(int argc, char* argv[])
 {
     logger->debug("Starting TextureAtlasApp");
 
-    TextureAtlasApp app;
+    TextureAtlasApp app(argv[1]);
 
     app.CreateWindow(800, 600);
     app.Run();

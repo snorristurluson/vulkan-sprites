@@ -113,7 +113,7 @@ protected:
             default:
                 return;
         }
-        m_logger->log(severity, "module", *msg.logger_name, msg.raw.data());
+        m_logger->log(severity, "module", *msg.logger_name, msg.raw.c_str());
     }
     void _flush() override
     {

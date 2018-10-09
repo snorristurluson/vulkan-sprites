@@ -5,8 +5,14 @@
 #include "TextureAtlasApp.h"
 #include "../../engine/Renderer.h"
 #include "../../engine/TextureAtlas.h"
+#include "../../engine/Logger.h"
 
-TextureAtlasApp::TextureAtlasApp() {
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
+static auto logger = GetLogger("main");
+
+TextureAtlasApp::TextureAtlasApp(const std::string& root) : m_rootDirectory(root) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
@@ -20,30 +26,41 @@ void TextureAtlasApp::CreateWindow(int width, int height) {
     m_height *= 2;
 
     glfwSetWindowUserPointer(m_window, this);
-    glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
 }
 
-void TextureAtlasApp::framebufferResizeCallback(GLFWwindow *window, int width, int height) {
-
+bool endsWith(const std::string& s, const std::string& suffix)
+{
+    return s.rfind(suffix) == (s.size()-suffix.size());
 }
 
 void TextureAtlasApp::Run() {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
 
-    auto ta = r.CreateTextureAtlas(512, 512);
-    auto t1 = ta->Add("freecandybuttons/png/Back (1).png");
-    auto t2 = ta->Add("freecandybuttons/png/Back (2).png");
+    auto ta = r.CreateTextureAtlas(2048, 2048);
+
+    std::vector<std::shared_ptr<AtlasTexture>> textures;
+    for(auto& p: fs::directory_iterator(m_rootDirectory)) {
+        std::string s = p.path();
+
+        if(endsWith(s, ".png")) {
+            auto t = ta->Add(s);
+            if(t) {
+                logger->debug("Added {} to atlas", s);
+                textures.emplace_back(t);
+            } else {
+                logger->debug("{} didn't fit", s);
+            }
+        } else {
+            logger->debug("{} is not a texture", s);
+        }
+    }
 
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
         if (r.StartFrame()) {
             r.SetTexture(ta);
-            r.DrawSprite(0, 0, 512, 512);
-            r.SetTexture(t1);
-            r.DrawSprite(512, 0, 64, 64);
-            r.SetTexture(t2);
-            r.DrawSprite(512, 64, 64, 64);
+            r.DrawSprite(0, 0, 1024, 1024);
             r.EndFrame();
         }
 
