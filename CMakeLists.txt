@@ -54,6 +54,9 @@ add_subdirectory(engine)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+find_package(Freetype REQUIRED)
+include_directories(${FREETYPE_INCLUDE_DIRS})
+
 add_executable(
         first
         samples/first/main.cpp
@@ -84,6 +87,5 @@ add_executable(
         engine/AreaAllocator_test.cpp
         engine/AreaList_test.cpp
         engine/Renderer_test.cpp
-        engine/TextureAtlas_test.cpp)
-target_link_libraries(Renderer_test engine)
-target_link_libraries(Renderer_test gtest_main)
+        engine/TextureAtlas_test.cpp engine/FontManager_test.cpp)
+target_link_libraries(Renderer_test gtest_main engine ${FREETYPE_LIBRARIES})

@@ -1,3 +1,6 @@
+find_package(Freetype REQUIRED)
+include_directories(${FREETYPE_INCLUDE_DIRS})
+
 add_library(
         engine
         Renderer.cpp Renderer.h
@@ -10,7 +13,7 @@ add_library(
         AreaAllocator.cpp AreaAllocator.h
         AreaList.cpp AreaList.h
         Area.cpp Area.h
-        TextureAtlas.cpp TextureAtlas.h ITexture.h AtlasTexture.cpp AtlasTexture.h)
+        TextureAtlas.cpp TextureAtlas.h ITexture.h AtlasTexture.cpp AtlasTexture.h FontManager.cpp FontManager.h Glyph.cpp Glyph.h Font.cpp Font.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES
