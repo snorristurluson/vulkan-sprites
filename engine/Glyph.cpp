@@ -20,15 +20,28 @@ Glyph::Glyph(FT_Face face, FT_UInt ix, std::shared_ptr<TextureAtlas> ta) : m_fac
 
     m_left = glyphSlot->bitmap_left;
     m_top = glyphSlot->bitmap_top;
+    m_advance = glyphSlot->advance.x / 64;
+
+    CreateTextureFromBitmap(ta);
+
+}
+
+void Glyph::CreateTextureFromBitmap(std::shared_ptr<TextureAtlas> &ta) {
+    FT_GlyphSlot glyphSlot = m_face->glyph;
+
+    if(glyphSlot->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY || glyphSlot->bitmap.num_grays != 256) {
+        throw std::runtime_error("unsupported pixel mode");
+    }
 
     auto width = glyphSlot->bitmap.width;
     auto height = glyphSlot->bitmap.rows;
     auto bufferSize = width*height*4;
-    std::vector<uint8_t> buffer(bufferSize);
-    auto mode = glyphSlot->bitmap.pixel_mode;
-    if(mode != FT_PIXEL_MODE_GRAY || glyphSlot->bitmap.num_grays != 256) {
-        throw std::runtime_error("unsupported pixel mode");
+
+    if(bufferSize == 0) {
+        return;
     }
+
+    std::vector<uint8_t> buffer(bufferSize);
 
     uint8_t* src = glyphSlot->bitmap.buffer;
     uint8_t* startOfLine = src;
@@ -60,4 +73,8 @@ int Glyph::GetTop() {
 
 std::shared_ptr<ITexture> Glyph::GetTexture() {
     return m_texture;
+}
+
+int Glyph::GetAdvance() {
+    return m_advance;
 }

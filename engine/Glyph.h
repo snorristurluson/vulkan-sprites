@@ -19,6 +19,7 @@ public:
 
     int GetLeft();
     int GetTop();
+    int GetAdvance();
 
     std::shared_ptr<ITexture> GetTexture();
 
@@ -27,7 +28,10 @@ protected:
     FT_UInt m_glyphIndex;
     int m_left;
     int m_top;
+    int m_advance;
     std::shared_ptr<ITexture> m_texture;
+
+    void CreateTextureFromBitmap(std::shared_ptr<TextureAtlas> &ta);
 };
 
 

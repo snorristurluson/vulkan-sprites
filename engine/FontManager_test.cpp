@@ -75,6 +75,28 @@ TEST_F(FontManagerTest, Font_GetGlyph) {
 
     EXPECT_EQ(texture->GetWidth(), 7);
     EXPECT_EQ(texture->GetHeight(), 7);
+    EXPECT_EQ(glyph->GetAdvance(), 7);
+}
+
+TEST_F(FontManagerTest, Font_GetGlyph_Space) {
+    FontManager fm(m_textureAtlas);
+
+    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    ASSERT_NE(font, nullptr);
+
+    auto glyph = font->GetGlyph(' ');
+    ASSERT_NE(glyph, nullptr);
+
+    auto left = glyph->GetLeft();
+    auto top = glyph->GetTop();
+
+    EXPECT_EQ(left, 0);
+    EXPECT_EQ(top, 0);
+
+    auto texture = glyph->GetTexture();
+    EXPECT_EQ(texture, nullptr);
+
+    EXPECT_EQ(glyph->GetAdvance(), 4);
 }
 
 #pragma clang diagnostic pop
