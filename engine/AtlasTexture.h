@@ -15,8 +15,11 @@ public:
     explicit AtlasTexture(TextureAtlas* owner, Area* area);
 
     VkDescriptorSet GetDescriptorSet() override;
-
     TextureWindow GetTextureWindow() override;
+
+    int GetWidth() override;
+
+    int GetHeight() override;
 
 protected:
     TextureAtlas* m_owner;

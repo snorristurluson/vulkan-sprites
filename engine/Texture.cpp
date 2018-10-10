@@ -72,11 +72,11 @@ Texture::~Texture() {
     m_renderer->DestroyImage(m_boundImage);
 }
 
-int Texture::GetWidth() const {
+int Texture::GetWidth() {
     return m_width;
 }
 
-int Texture::GetHeight() const {
+int Texture::GetHeight() {
     return m_height;
 }
 

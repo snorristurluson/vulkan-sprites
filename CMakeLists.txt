@@ -75,6 +75,12 @@ target_link_libraries(second engine)
 target_link_libraries(second Threads::Threads)
 
 add_executable(
+        text
+        samples/text/main.cpp
+        samples/text/TextApp.cpp samples/text/TextApp.h)
+target_link_libraries(text engine Threads::Threads ${FREETYPE_LIBRARIES})
+
+add_executable(
         textureatlas
         samples/textureatlas/main.cpp
         samples/textureatlas/TextureAtlasApp.cpp samples/textureatlas/TextureAtlasApp.h)

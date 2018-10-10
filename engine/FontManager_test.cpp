@@ -69,6 +69,12 @@ TEST_F(FontManagerTest, Font_GetGlyph) {
 
     EXPECT_EQ(left, 0);
     EXPECT_EQ(top, 7);
+
+    auto texture = glyph->GetTexture();
+    ASSERT_NE(texture, nullptr);
+
+    EXPECT_EQ(texture->GetWidth(), 7);
+    EXPECT_EQ(texture->GetHeight(), 7);
 }
 
 #pragma clang diagnostic pop

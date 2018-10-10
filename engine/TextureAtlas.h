@@ -17,14 +17,14 @@ public:
 
     void Initialize(Renderer *pRenderer, int width, int height);
 
-    int GetWidth();
-    int GetHeight();
-
     std::shared_ptr<AtlasTexture> Add(const std::string & filename);
+
     std::shared_ptr<AtlasTexture> Add(int width, int height, uint8_t* pixels);
 
     VkDescriptorSet GetDescriptorSet() override;
     TextureWindow GetTextureWindow() override;
+    int GetWidth() override;
+    int GetHeight() override;
 
 protected:
     int m_width;

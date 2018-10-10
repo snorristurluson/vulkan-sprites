@@ -18,11 +18,10 @@ public:
 
     ~Texture();
 
-    int GetWidth() const;
-    int GetHeight() const;
-
     VkDescriptorSet GetDescriptorSet() override;
     TextureWindow GetTextureWindow() override;
+    int GetWidth() override;
+    int GetHeight() override;
 
 protected:
     Renderer* m_renderer;

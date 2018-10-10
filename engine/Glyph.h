@@ -8,18 +8,26 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <memory>
+
+class ITexture;
+class TextureAtlas;
+
 class Glyph {
 public:
-    Glyph(FT_Face face, FT_UInt ix);
+    Glyph(FT_Face face, FT_UInt ix, std::shared_ptr<TextureAtlas> ta);
 
     int GetLeft();
     int GetTop();
+
+    std::shared_ptr<ITexture> GetTexture();
 
 protected:
     FT_Face m_face;
     FT_UInt m_glyphIndex;
     int m_left;
     int m_top;
+    std::shared_ptr<ITexture> m_texture;
 };
 
 

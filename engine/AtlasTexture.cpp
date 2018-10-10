@@ -20,3 +20,11 @@ TextureWindow AtlasTexture::GetTextureWindow() {
     float y1 = y0 + float(m_area->height) / float(m_owner->GetHeight());
     return TextureWindow{x0, y0, x1, y1};
 }
+
+int AtlasTexture::GetWidth() {
+    return m_area->width;
+}
+
+int AtlasTexture::GetHeight() {
+    return m_area->height;
+}

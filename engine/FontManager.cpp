@@ -19,7 +19,7 @@ std::shared_ptr<Font> FontManager::GetFont(const std::string& fontname, int pt) 
         if(error) {
             throw std::runtime_error("couldn't set pixel sizes");
         }
-        return std::make_shared<Font>(face);
+        return std::make_shared<Font>(face, m_textureAtlas);
     }
 
     throw std::runtime_error("couldn't load font");

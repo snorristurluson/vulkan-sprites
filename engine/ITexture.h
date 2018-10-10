@@ -17,6 +17,8 @@ struct TextureWindow {
 struct ITexture {
     virtual VkDescriptorSet GetDescriptorSet() = 0;
     virtual TextureWindow GetTextureWindow() = 0;
+    virtual int GetWidth() = 0;
+    virtual int GetHeight() = 0;
 };
 
 #endif //VULKAN_SPRITES_ITEXTURE_H
