@@ -8,6 +8,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <string>
+#include <memory>
+#include <vector>
+#include "../../engine/Renderer.h"
+
+class TextureAtlas;
+class ITexture;
 
 class TextureAtlasApp {
 public:
@@ -23,6 +29,9 @@ protected:
     int m_width;
     int m_height;
     std::string m_rootDirectory;
+
+    void LoadTextures(Renderer &renderer, std::shared_ptr<TextureAtlas> &ta,
+                          std::vector<std::shared_ptr<ITexture>> &textures) const;
 };
 
 
