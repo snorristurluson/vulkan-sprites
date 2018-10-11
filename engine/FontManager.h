@@ -15,7 +15,7 @@ class TextureAtlas;
 
 class FontManager {
 public:
-    FontManager(std::shared_ptr<TextureAtlas> ta);
+    explicit FontManager(std::shared_ptr<TextureAtlas> ta);
 
     std::shared_ptr<Font> GetFont(const std::string& fontname, int pt);
 

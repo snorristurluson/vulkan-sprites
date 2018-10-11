@@ -12,21 +12,22 @@ Texture::Texture(Renderer *renderer, const std::string &filename) : m_renderer(r
 {
     int width;
     int height;
-    stbi_uc* pixels = stbi_load(filename.c_str(), &width, &height, &m_channels, STBI_rgb_alpha);
+    int channels;
+    stbi_uc* pixels = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb_alpha);
     if(!pixels) {
         throw std::runtime_error("failed to load texture image");
     }
 
-    init(width, height, pixels);
+    init(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels);
 
     stbi_image_free(pixels);
 }
 
-Texture::Texture(Renderer *renderer, int width, int height, uint8_t *pixels) : m_renderer(renderer) {
+Texture::Texture(Renderer *renderer, uint32_t width, uint32_t height, uint8_t *pixels) : m_renderer(renderer) {
     init(width, height, pixels);
 }
 
-void Texture::init(int width, int height, uint8_t *pixels) {
+void Texture::init(uint32_t width, uint32_t height, uint8_t *pixels) {
     m_width = width;
     m_height = height;
     VkDeviceSize imageSize = m_width * m_height * 4;

@@ -764,7 +764,7 @@ std::shared_ptr<Texture> Renderer::CreateTexture(const std::string &filename) {
     return std::make_shared<Texture>(this, filename);
 }
 
-std::shared_ptr<TextureAtlas> Renderer::CreateTextureAtlas(int width, int height) {
+std::shared_ptr<TextureAtlas> Renderer::CreateTextureAtlas(uint32_t width, uint32_t height) {
     auto ta = std::make_shared<TextureAtlas>();
     ta->Initialize(this, width, height);
     return ta;

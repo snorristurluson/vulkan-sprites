@@ -7,13 +7,16 @@
 
 #include "stb_image.h"
 
+TextureAtlas::TextureAtlas() : m_width(0), m_height(0), m_renderer(nullptr)
+{}
+
 TextureAtlas::~TextureAtlas() {
     m_renderer->DestroyImageView(m_imageView);
     m_renderer->DestroySampler(m_sampler);
     m_renderer->DestroyImage(m_boundImage);
 }
 
-void TextureAtlas::Initialize(Renderer *pRenderer, int width, int height) {
+void TextureAtlas::Initialize(Renderer *pRenderer, uint32_t width, uint32_t height) {
     m_renderer = pRenderer;
 
     m_width = width;
@@ -55,14 +58,14 @@ std::shared_ptr<AtlasTexture> TextureAtlas::Add(const std::string &filename) {
         throw std::runtime_error("failed to load texture image");
     }
 
-    auto result = Add(width, height, pixels);
+    auto result = Add(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels);
 
     stbi_image_free(pixels);
 
     return result;
 }
 
-std::shared_ptr<AtlasTexture> TextureAtlas::Add(int width, int height, uint8_t *pixels) {
+std::shared_ptr<AtlasTexture> TextureAtlas::Add(uint32_t width, uint32_t height, uint8_t *pixels) {
     auto area = m_allocator.Allocate(width, height);
     if(!area) {
         return nullptr;

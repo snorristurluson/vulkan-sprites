@@ -4,6 +4,9 @@
 
 #include "AreaAllocator.h"
 
+AreaAllocator::AreaAllocator() : m_width(0), m_height(0)
+{}
+
 void AreaAllocator::Initialize(int width, int height)
 {
     m_width = width;
@@ -67,7 +70,7 @@ Area *AreaAllocator::getFreeArea(int width, int height)
 
 int AreaAllocator::GetFreeAreaCount()
 {
-    return m_freeAreas.size();
+    return static_cast<int>(m_freeAreas.size());
 }
 
 int AreaAllocator::GetFreeAreaSize()
@@ -86,7 +89,7 @@ int AreaAllocator::accumulateAreaSize(const AreaList &areaList) const
 
 int AreaAllocator::GetAllocatedAreaCount()
 {
-    return m_allocatedAreas.size();
+    return static_cast<int>(m_allocatedAreas.size());
 }
 
 int AreaAllocator::GetAllocatedAreaSize()
@@ -134,17 +137,4 @@ void AreaAllocator::collapseFreeAreas()
         }
         m_freeAreas = collapsedAreas;
     } while(collapsed > 0);
-}
-
-bool AreaAllocator::canCombineLeftRight(const Area *first, const Area *second) const
-{
-    bool canCombineLeftRight = false;
-    if(first->y && second->y) {
-        if(first->height == second->height) {
-            if(first->x + first->width == second->x) {
-                canCombineLeftRight = true;
-            }
-        }
-    }
-    return canCombineLeftRight;
 }

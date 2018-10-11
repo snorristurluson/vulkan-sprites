@@ -15,6 +15,8 @@
 class AreaAllocator
 {
 public:
+    AreaAllocator();
+
     void Initialize(int width, int height);
 
     int GetTotalWidth();
@@ -41,8 +43,6 @@ protected:
     Area *getFreeArea(int width, int height);
 
     void collapseFreeAreas();
-
-    bool canCombineLeftRight(const Area *first, const Area *second) const;
 };
 
 

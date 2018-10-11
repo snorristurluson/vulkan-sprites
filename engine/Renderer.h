@@ -47,7 +47,7 @@ public:
 
     std::shared_ptr<Texture> CreateTexture(const std::string &filename);
 
-    std::shared_ptr<TextureAtlas> CreateTextureAtlas(int width, int height);
+    std::shared_ptr<TextureAtlas> CreateTextureAtlas(uint32_t width, uint32_t height);
 
     BoundBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
     void DestroyBuffer(BoundBuffer buffer);
@@ -73,7 +73,6 @@ public:
     void DestroySampler(VkSampler sampler);
 
     VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
-    void DestroyTextureDescriptorSet(VkDescriptorSet descriptorSet);
 
     void WaitUntilDeviceIdle();
 
@@ -170,7 +169,7 @@ protected:
 
     struct DrawCommand {
         DrawCommand(VkDescriptorSet ds, uint16_t bi, uint16_t ni) :
-                descriptorSet(ds),
+            descriptorSet(ds),
             baseIndex(bi),
             numIndices(ni)
         {}

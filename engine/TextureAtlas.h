@@ -13,13 +13,15 @@
 class TextureAtlas : public ITexture {
 
 public:
+    TextureAtlas();
+
     ~TextureAtlas();
 
-    void Initialize(Renderer *pRenderer, int width, int height);
+    void Initialize(Renderer *pRenderer, uint32_t width, uint32_t height);
 
     std::shared_ptr<AtlasTexture> Add(const std::string & filename);
 
-    std::shared_ptr<AtlasTexture> Add(int width, int height, uint8_t* pixels);
+    std::shared_ptr<AtlasTexture> Add(uint32_t width, uint32_t height, uint8_t *pixels);
 
     VkDescriptorSet GetDescriptorSet() override;
     TextureWindow GetTextureWindow() override;
@@ -27,8 +29,8 @@ public:
     int GetHeight() override;
 
 protected:
-    int m_width;
-    int m_height;
+    uint32_t m_width;
+    uint32_t m_height;
     Renderer *m_renderer;
     BoundImage m_boundImage;
     VkImageView m_imageView;

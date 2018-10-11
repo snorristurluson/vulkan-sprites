@@ -14,7 +14,7 @@
 class Texture : public ITexture {
 public:
     Texture(Renderer *renderer, const std::string &filename);
-    Texture(Renderer *renderer, int width, int height, uint8_t *pixels);
+    Texture(Renderer *renderer, uint32_t width, uint32_t height, uint8_t *pixels);
 
     ~Texture();
 
@@ -27,13 +27,12 @@ protected:
     Renderer* m_renderer;
     VkImageView m_imageView;
     VkSampler m_sampler;
-    int m_width;
-    int m_height;
-    int m_channels;
+    uint32_t m_width;
+    uint32_t m_height;
     BoundImage m_boundImage;
     VkDescriptorSet m_descriptorSet;
 
-    void init(int width, int height, uint8_t *pixels);
+    void init(uint32_t width, uint32_t height, uint8_t *pixels);
 };
 
 
