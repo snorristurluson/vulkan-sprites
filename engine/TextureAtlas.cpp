@@ -33,6 +33,10 @@ void TextureAtlas::Initialize(Renderer *pRenderer, uint32_t width, uint32_t heig
             m_boundImage.image,
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    m_renderer->TransitionImageLayout(
+            m_boundImage.image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     m_imageView = m_renderer->CreateImageView(m_boundImage.image, format);
     m_sampler = m_renderer->CreateSampler();
@@ -79,9 +83,18 @@ std::shared_ptr<AtlasTexture> TextureAtlas::Add(uint32_t width, uint32_t height,
 
     m_renderer->CopyToBufferMemory(stagingBuffer.bufferMemory, pixels, imageSize);
 
+    m_renderer->TransitionImageLayout(
+            m_boundImage.image,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     m_renderer->CopyBufferToImage(stagingBuffer.buffer, m_boundImage.image, width, height, area->x, area->y);
+    m_renderer->TransitionImageLayout(
+            m_boundImage.image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     m_renderer->DestroyBufferLater(stagingBuffer);
+
 
     return std::make_shared<AtlasTexture>(this, area);
 }
