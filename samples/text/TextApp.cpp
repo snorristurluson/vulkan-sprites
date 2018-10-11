@@ -29,11 +29,12 @@ void TextApp::Run() {
 
     auto ta = r.CreateTextureAtlas(512, 512);
     FontManager fm(ta);
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 72);
+    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 144);
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
+            r.SetColor({0.0f, 1.0f, 0.0f, 1.0f});
             std::string text("This is a test");
             int pos = 0;
             for(auto c: text) {
@@ -42,7 +43,7 @@ void TextApp::Run() {
                 if(texture) {
                     r.SetTexture(texture);
                     int x = pos + glyph->GetLeft();
-                    int y = 64 - glyph->GetTop();
+                    int y = 128 - glyph->GetTop();
                     r.DrawSprite(x, y, texture->GetWidth(), texture->GetHeight());
                 }
 

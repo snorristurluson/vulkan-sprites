@@ -17,6 +17,7 @@ protected:
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         m_window = glfwCreateWindow(800, 600, "TextureAtlasTest", nullptr, nullptr);
+        m_renderer.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     }
 
     void TearDown() override {
@@ -24,23 +25,20 @@ protected:
     }
 
     GLFWwindow *m_window{};
+    Renderer m_renderer;
 };
 
 TEST_F(TextureAtlasTest, CanCreate) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    auto ta = r.CreateTextureAtlas(256, 256);
+    auto ta = m_renderer.CreateTextureAtlas(256, 256);
 
     ASSERT_NE(ta, nullptr);
     EXPECT_EQ(ta->GetWidth(), 256);
     EXPECT_EQ(ta->GetHeight(), 256);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(TextureAtlasTest, Add_Single) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    auto ta = r.CreateTextureAtlas(256, 256);
+    auto ta = m_renderer.CreateTextureAtlas(256, 256);
 
     auto at = ta->Add("resources/1.png");
 
@@ -51,24 +49,20 @@ TEST_F(TextureAtlasTest, Add_Single) {
     EXPECT_EQ(tw.y0, 0.0f);
     EXPECT_EQ(tw.x1, 0.25f);
     EXPECT_EQ(tw.y1, 0.25f);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(TextureAtlasTest, Add_SingleTooLarge) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    auto ta = r.CreateTextureAtlas(16, 16);
+    auto ta = m_renderer.CreateTextureAtlas(16, 16);
 
     auto at = ta->Add("resources/1.png");
 
     EXPECT_EQ(at, nullptr);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(TextureAtlasTest, Add_Two) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    auto ta = r.CreateTextureAtlas(256, 256);
+    auto ta = m_renderer.CreateTextureAtlas(256, 256);
 
     auto at1 = ta->Add("resources/1.png");
     auto at2 = ta->Add("resources/2.png");
@@ -76,7 +70,35 @@ TEST_F(TextureAtlasTest, Add_Two) {
     ASSERT_NE(at1, nullptr);
     ASSERT_NE(at2, nullptr);
 
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}
+
+TEST_F(TextureAtlasTest, Add_SingleInFrame) {
+    auto ta = m_renderer.CreateTextureAtlas(256, 256);
+
+    m_renderer.StartFrame();
+    auto at1 = ta->Add("resources/1.png");
+    m_renderer.EndFrame();
+    m_renderer.WaitUntilDeviceIdle();
+
+    ASSERT_NE(at1, nullptr);
+
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}
+
+TEST_F(TextureAtlasTest, Add_SingleInFrameWithRender) {
+    auto ta = m_renderer.CreateTextureAtlas(256, 256);
+
+    m_renderer.StartFrame();
+    auto at1 = ta->Add("resources/1.png");
+    m_renderer.SetTexture(at1);
+    m_renderer.DrawSprite(0, 0, at1->GetWidth(), at1->GetHeight());
+    m_renderer.EndFrame();
+    m_renderer.WaitUntilDeviceIdle();
+
+    ASSERT_NE(at1, nullptr);
+
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 #pragma clang diagnostic pop
