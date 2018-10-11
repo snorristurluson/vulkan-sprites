@@ -35,22 +35,11 @@ void TextApp::Run() {
         glfwPollEvents();
         if(r.StartFrame()) {
             r.SetColor({0.0f, 1.0f, 0.0f, 1.0f});
-            std::string text("This is a test");
-            int pos = 0;
-            for(auto c: text) {
-                auto glyph = font->GetGlyph(c);
-                auto texture = glyph->GetTexture();
-                if(texture) {
-                    r.SetTexture(texture);
-                    int x = pos + glyph->GetLeft();
-                    int y = 128 - glyph->GetTop();
-                    r.DrawSprite(x, y, texture->GetWidth(), texture->GetHeight());
-                }
+            font->Draw(r, 0, 128, "This is a test");
 
-                pos += glyph->GetAdvance();
-            }
             r.SetTexture(ta);
             r.DrawSprite(2048, 0, 2048, 2048);
+
             r.EndFrame();
         }
     }

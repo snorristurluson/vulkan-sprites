@@ -20,6 +20,8 @@ Glyph::Glyph(FT_Face face, FT_UInt ix, std::shared_ptr<TextureAtlas> ta) : m_fac
 
     m_left = glyphSlot->bitmap_left;
     m_top = glyphSlot->bitmap_top;
+    m_width = static_cast<int>(glyphSlot->metrics.width / 64);
+    m_height = static_cast<int>(glyphSlot->metrics.height / 64);
     m_advance = static_cast<int>(glyphSlot->advance.x / 64);
 
     CreateTextureFromBitmap(ta);
@@ -73,6 +75,14 @@ int Glyph::GetTop() {
 
 std::shared_ptr<ITexture> Glyph::GetTexture() {
     return m_texture;
+}
+
+int Glyph::GetWidth() {
+    return m_width;
+}
+
+int Glyph::GetHeight() {
+    return m_height;
 }
 
 int Glyph::GetAdvance() {

@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include "Renderer.h"
 #include "FontManager.h"
+#include "Font.h"
 
 class FontManagerTest : public ::testing::Test {
 protected:
@@ -75,7 +76,7 @@ TEST_F(FontManagerTest, Font_GetGlyph) {
 
     EXPECT_EQ(texture->GetWidth(), 7);
     EXPECT_EQ(texture->GetHeight(), 7);
-    EXPECT_EQ(glyph->GetAdvance(), 7);
+    EXPECT_EQ(glyph->GetWidth(), 7);
 }
 
 TEST_F(FontManagerTest, Font_GetGlyph_Space) {
@@ -97,6 +98,29 @@ TEST_F(FontManagerTest, Font_GetGlyph_Space) {
     EXPECT_EQ(texture, nullptr);
 
     EXPECT_EQ(glyph->GetAdvance(), 4);
+}
+
+TEST_F(FontManagerTest, Font_Measure) {
+    FontManager fm(m_textureAtlas);
+
+    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto m = font->Measure("This is a test");
+
+    EXPECT_EQ(m.width, 80);
+    EXPECT_EQ(m.height, 24);
+}
+
+TEST_F(FontManagerTest, Font_Render) {
+    FontManager fm(m_textureAtlas);
+
+    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 #pragma clang diagnostic pop

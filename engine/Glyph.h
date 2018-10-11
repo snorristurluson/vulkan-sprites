@@ -19,6 +19,8 @@ public:
 
     int GetLeft();
     int GetTop();
+    int GetWidth();
+    int GetHeight();
     int GetAdvance();
 
     std::shared_ptr<ITexture> GetTexture();
@@ -28,6 +30,8 @@ protected:
     FT_UInt m_glyphIndex;
     int m_left;
     int m_top;
+    int m_width;
+    int m_height;
     int m_advance;
     std::shared_ptr<ITexture> m_texture;
 

@@ -5,6 +5,7 @@
 //
 
 #include "Font.h"
+#include "Renderer.h"
 
 Font::Font(const FT_Face& face, std::shared_ptr<TextureAtlas> ta) : m_face(face), m_textureAtlas(std::move(ta)) {
 
@@ -25,4 +26,33 @@ std::shared_ptr<Glyph> Font::GetGlyph(uint16_t c) {
 
     m_glyphs[c] = glyph;
     return glyph;
+}
+
+TextDimensions Font::Measure(const std::string& text) {
+    int width = 0;
+    int height = 0;
+
+    for(auto c: text) {
+        auto glyph = GetGlyph(c);
+        width += glyph->GetAdvance();
+        height = std::max(height, glyph->GetTop() + glyph->GetHeight());
+    }
+
+    return TextDimensions{width, height};
+}
+
+void Font::Draw(Renderer &r, float x, float y, const std::string &text) {
+    int pos = 0;
+
+    for(auto c: text) {
+        auto glyph = GetGlyph(c);
+        auto texture = glyph->GetTexture();
+        if(texture) {
+            r.SetTexture(texture);
+            float x0 = pos + glyph->GetLeft();
+            float y0 = y - glyph->GetTop();
+            r.DrawSprite(x0, y0, texture->GetWidth(), texture->GetHeight());
+        }
+        pos += glyph->GetAdvance();
+    }
 }
