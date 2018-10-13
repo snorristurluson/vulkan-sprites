@@ -6,7 +6,7 @@
 #include "Texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../extern/stb_image.h"
 
 Texture::Texture(Renderer *renderer, const std::string &filename) : m_renderer(renderer)
 {
