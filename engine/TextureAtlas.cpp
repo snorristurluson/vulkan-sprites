@@ -5,7 +5,7 @@
 #include "TextureAtlas.h"
 #include "Renderer.h"
 
-#include "stb_image.h"
+#include "../extern/stb_image.h"
 
 TextureAtlas::TextureAtlas() : m_width(0), m_height(0), m_renderer(nullptr)
 {}

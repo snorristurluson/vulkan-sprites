@@ -6,7 +6,7 @@ add_library(
         Renderer.cpp Renderer.h
         Vertex.cpp Vertex.h
         Texture.cpp Texture.h
-        stb_image.h
+        ../extern/stb_image.h
         ShaderLib.cpp ShaderLib.h
         DebugMessenger.cpp DebugMessenger.h
         Logger.cpp Logger.h
