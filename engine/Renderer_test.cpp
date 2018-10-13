@@ -9,8 +9,6 @@
 #include "Renderer.h"
 #include "Texture.h"
 
-// TODO: Hook into validation to allow tests to check for validation messages
-
 class RendererTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -47,7 +45,8 @@ TEST_F(RendererTest, Initialize_EnableValidation) {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     EXPECT_TRUE(r.IsInitialized());
-    EXPECT_NE(r.GetDebugMessenger(), nullptr);
+    ASSERT_NE(r.GetDebugMessenger(), nullptr);
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
@@ -64,7 +63,9 @@ TEST_F(RendererTest, SetClearColor) {
     r.SetClearColor(color);
     auto returned = r.GetClearColor();
     EXPECT_EQ(returned, color);
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
+
 TEST_F(RendererTest, CreateTexture) {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
@@ -72,6 +73,7 @@ TEST_F(RendererTest, CreateTexture) {
     ASSERT_NE(t.get(), nullptr);
     EXPECT_EQ(t->GetWidth(), 512);
     EXPECT_EQ(t->GetHeight(), 512);
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
 TEST_F(RendererTest, StartFrame) {

@@ -34,19 +34,11 @@ void FirstApp::Run()
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
     auto t = r.CreateTexture("resources/texture.jpg");
-    auto t1 = r.CreateTexture("resources/1.png");
-    auto t2 = r.CreateTexture("resources/2.png");
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
-            for(int i = 0; i < 33; ++i) {
-                for(int j = 0; j < 66; ++j) {
-                    r.SetTexture(t1);
-                    r.DrawSprite(i*50, j*50, 40, 40);
-                    r.SetTexture(t2);
-                    r.DrawSprite(i*45, j*45, 80, 80);
-                }
-            }
+            r.SetTexture(t);
+            r.DrawSprite(32, 32, t->GetWidth(), t->GetHeight());
             r.EndFrame();
         }
     }

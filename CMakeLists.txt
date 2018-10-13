@@ -57,6 +57,8 @@ find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
+include_directories(engine)
+
 add_executable(
         first
         samples/first/main.cpp
@@ -83,9 +85,23 @@ target_link_libraries(text engine Threads::Threads ${FREETYPE_LIBRARIES})
 add_executable(
         textureatlas
         samples/textureatlas/main.cpp
-        samples/textureatlas/TextureAtlasApp.cpp samples/textureatlas/TextureAtlasApp.h)
+        samples/textureatlas/TextureAtlasApp.cpp
+        samples/textureatlas/TextureAtlasApp.h
+)
 target_link_libraries(textureatlas engine)
 target_link_libraries(textureatlas Threads::Threads stdc++fs)
+
+add_executable(
+        breakout
+        samples/breakout/main.cpp
+        samples/breakout/BreakOutApp.cpp
+        samples/breakout/BreakOutApp.h
+        samples/breakout/AppState.cpp
+        samples/breakout/AppState.h
+        samples/breakout/SplashScreen.cpp
+        samples/breakout/SplashScreen.h
+        samples/breakout/MainMenu.cpp samples/breakout/MainMenu.h)
+target_link_libraries(breakout engine ${FREETYPE_LIBRARIES})
 
 add_executable(
         Renderer_test
