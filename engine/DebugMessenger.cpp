@@ -3,9 +3,12 @@
 //
 
 #include "DebugMessenger.h"
+#include "Logger.h"
 #include <iostream>
 
 #define UNUSED(x) (void(x))
+
+static auto logger = GetLogger("vulkan");
 
 VkBool32
 DebugMessenger::Log(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -24,14 +27,17 @@ VkBool32 DebugMessenger::Log(const VkDebugUtilsMessageSeverityFlagBitsEXT &messa
     if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
         severity = "info";
         m_infoCount++;
+        logger->info(pCallbackData->pMessage);
     }
     if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
         severity = "warning";
         m_warningCount++;
+        logger->warn(pCallbackData->pMessage);
     }
     if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         severity = "error";
         m_errorCount++;
+        logger->error(pCallbackData->pMessage);
     }
 
     if (!severity.empty()) {
