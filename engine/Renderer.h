@@ -181,7 +181,7 @@ protected:
     std::vector<DrawCommand> m_drawCommands;
     unsigned long m_numDrawCommands;
 
-    std::vector<std::vector<BoundBuffer>> m_buffersToDestroyAtEndOfFrame;
+    std::vector<std::vector<BoundBuffer>> m_buffersToDestroyLater;
 
 protected:
     void createInstance();

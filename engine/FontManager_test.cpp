@@ -123,4 +123,65 @@ TEST_F(FontManagerTest, Font_Render) {
     EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
+TEST_F(FontManagerTest, Font_Render_MultipleFrames) {
+    FontManager fm(m_textureAtlas);
+
+    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font->Draw(m_renderer, 0, 128, "This is a test");
+    m_renderer.EndFrame();
+
+    m_renderer.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}
+
+TEST_F(FontManagerTest, Font_Render_TwoFontsMultipleFrames) {
+    FontManager fm(m_textureAtlas);
+
+    auto font1 = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font2 = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 32);
+
+    m_renderer.StartFrame();
+    font1->Draw(m_renderer, 0, 128, "This is a test");
+    font2->Draw(m_renderer, 0, 256, "This is also");
+    font2->Draw(m_renderer, 0, 384, " a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font1->Draw(m_renderer, 0, 128, "This is a test");
+    font2->Draw(m_renderer, 0, 256, "This is also a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font1->Draw(m_renderer, 0, 128, "This is a test");
+    font2->Draw(m_renderer, 0, 256, "This is also a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font1->Draw(m_renderer, 0, 128, "This is a test");
+    font2->Draw(m_renderer, 0, 256, "This is also a test");
+    m_renderer.EndFrame();
+    m_renderer.StartFrame();
+    font1->Draw(m_renderer, 0, 128, "This is a test");
+    font2->Draw(m_renderer, 0, 256, "This is also a test");
+    m_renderer.EndFrame();
+    m_renderer.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(m_renderer.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}
+
 #pragma clang diagnostic pop

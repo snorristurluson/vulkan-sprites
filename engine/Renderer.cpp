@@ -214,7 +214,7 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createPerFrameDescriptorSets();
     createSyncObjects();
     createIndexAndVertexBuffers();
-    m_buffersToDestroyAtEndOfFrame.resize(getMaxFramesInFlight());
+    m_buffersToDestroyLater.resize(getMaxFramesInFlight());
 
     uint8_t whitePixel[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     m_defaultTexture = std::make_shared<Texture>(this, 1, 1, &whitePixel[0]);
@@ -1175,7 +1175,7 @@ void Renderer::cleanup() {
 }
 
 void Renderer::cleanupPendingDestroyBuffers() {
-    for(auto& buffers: m_buffersToDestroyAtEndOfFrame) {
+    for(auto& buffers: m_buffersToDestroyLater) {
         for(auto buffer: buffers) {
             DestroyBuffer(buffer);
         }
@@ -1280,6 +1280,11 @@ bool Renderer::StartFrame() {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
+    for(auto buffer: m_buffersToDestroyLater[m_currentFrame]) {
+        DestroyBuffer(buffer);
+    }
+    m_buffersToDestroyLater[m_currentFrame].clear();
+
     m_currentDescriptorSet = m_defaultTexture->GetDescriptorSet();
     m_currentTextureWindow = m_defaultTexture->GetTextureWindow();
     m_currentColor = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -1381,12 +1386,6 @@ void Renderer::EndFrame() {
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image");
     }
-
-    int toDestroy = (m_currentFrame + getMaxFramesInFlight() - 1) % getMaxFramesInFlight();
-    for(auto buffer: m_buffersToDestroyAtEndOfFrame[toDestroy]) {
-        DestroyBuffer(buffer);
-    }
-    m_buffersToDestroyAtEndOfFrame[toDestroy].clear();
 
     m_currentFrame = m_nextFrame;
 }
@@ -1654,7 +1653,7 @@ DebugMessenger *Renderer::GetDebugMessenger() {
 }
 
 void Renderer::DestroyBufferLater(BoundBuffer buffer) {
-    m_buffersToDestroyAtEndOfFrame[m_currentFrame].emplace_back(buffer);
+    m_buffersToDestroyLater[m_currentFrame].emplace_back(buffer);
 }
 
 #pragma clang diagnostic pop
