@@ -7,14 +7,6 @@ link_libraries(glfw)
 link_libraries(vulkan)
 
 
-if(UNIX)
-    set(VULKAN_DIR "$ENV{HOME}/vulkansdk-linux-1.1.82.1/x86_64")
-    include_directories($ENV{HOME}/telemetry/3.0.1.1461/include)
-    link_directories($ENV{HOME}/telemetry/3.0.1.1461/lib)
-    link_libraries(rad_tm_linux_x64)
-    add_compile_definitions(TELEMETRY_ENABLED=1)
-endif(UNIX)
-
 # macOS specific settings
 # Needs MoltenVK, plus brew installed packages go in a different location
 if(APPLE)
@@ -24,7 +16,14 @@ if(APPLE)
     link_libraries(MoltenVK)
     include_directories(/usr/local/include)
     link_directories(/usr/local/lib)
-endif(APPLE)
+elseif(UNIX)
+    set(VULKAN_DIR "$ENV{HOME}/vulkansdk-linux-1.1.82.1/x86_64")
+    include_directories($ENV{HOME}/telemetry/3.0.1.1461/include)
+    link_directories($ENV{HOME}/telemetry/3.0.1.1461/lib)
+    link_libraries(rad_tm_linux_x64)
+    add_compile_definitions(TELEMETRY_ENABLED=1)
+endif(UNIX)
+
 
 set(GLSL_VALIDATOR "${VULKAN_DIR}/bin/glslangValidator")
 
