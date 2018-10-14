@@ -19,7 +19,7 @@ add_library(
         FontManager.cpp FontManager.h
         Glyph.cpp Glyph.h
         Font.cpp Font.h
-)
+        telemetry.cpp telemetry.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES

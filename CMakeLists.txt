@@ -6,8 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 link_libraries(glfw)
 link_libraries(vulkan)
 
+
 if(UNIX)
     set(VULKAN_DIR "$ENV{HOME}/vulkansdk-linux-1.1.82.1/x86_64")
+    include_directories($ENV{HOME}/telemetry/3.0.1.1461/include)
+    link_directories($ENV{HOME}/telemetry/3.0.1.1461/lib)
+    link_libraries(rad_tm_linux_x64)
+    add_compile_definitions(TELEMETRY_ENABLED=1)
 endif(UNIX)
 
 # macOS specific settings

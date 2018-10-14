@@ -6,6 +6,7 @@
 #include "MainMenu.h"
 #include "Renderer.h"
 #include <Font.h>
+#include "telemetry.h"
 
 static auto logger = GetLogger("mainmenu");
 
@@ -17,11 +18,15 @@ void MainMenu::Init(Renderer &r) {
 }
 
 void MainMenu::Enter(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
     m_frameCounter = 0;
 }
 
 void MainMenu::Render(Renderer &r) {
+    tmFunction(0, 0);
+
     m_frameCounter++;
 
     m_titleFont->Draw(r, 32, 128, "Main menu");
@@ -30,10 +35,14 @@ void MainMenu::Render(Renderer &r) {
 }
 
 void MainMenu::Exit(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
 }
 
 void MainMenu::HandleKey(int key, int scancode, int action, int mods) {
+    tmFunction(0, 0);
+
     if(action == GLFW_PRESS) {
         switch(key) {
             case GLFW_KEY_1:

@@ -6,6 +6,7 @@
 #include <Logger.h>
 #include <Renderer.h>
 #include <Texture.h>
+#include <telemetry.h>
 
 static auto logger = GetLogger("main");
 
@@ -37,6 +38,8 @@ void BreakOutApp::CreateWindow(int width, int height)
 
 void BreakOutApp::Run()
 {
+    ConnectTelemetry();
+
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
     r.SetClearColor({0.0f, 0.0f, 0.0f, 1.0f});
@@ -67,6 +70,7 @@ void BreakOutApp::Run()
             }
             r.EndFrame();
         }
+        tmTick(0);
     }
     r.WaitUntilDeviceIdle();
 }

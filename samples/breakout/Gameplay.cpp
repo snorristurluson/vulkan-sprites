@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "Font.h"
 #include "Gameplay.h"
+#include "telemetry.h"
 
 static auto logger = GetLogger("gameplay");
 
@@ -19,12 +20,16 @@ void Gameplay::Init(Renderer &r) {
 }
 
 void Gameplay::Enter(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
     m_frameCounter = 0;
 
 }
 
 void Gameplay::Render(Renderer &r) {
+    tmFunction(0, 0);
+
     m_frameCounter++;
 
     m_titleFont->Draw(r, 32, 128, "Gameplay");
@@ -32,10 +37,14 @@ void Gameplay::Render(Renderer &r) {
 }
 
 void Gameplay::Exit(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
 }
 
 void Gameplay::HandleKey(int key, int scancode, int action, int mods) {
+    tmFunction(0, 0);
+
     if(action == GLFW_PRESS) {
         m_app->ChangeState(GAME_OVER);
     }

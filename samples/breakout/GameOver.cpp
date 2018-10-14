@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "Font.h"
 #include "GameOver.h"
+#include "telemetry.h"
 
 static auto logger = GetLogger("mainmenu");
 
@@ -18,18 +19,24 @@ void GameOver::Init(Renderer &r) {
 }
 
 void GameOver::Enter(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
     m_frameCounter = 0;
 
 }
 
 void GameOver::Render(Renderer &r) {
+    tmFunction(0, 0);
+
     m_frameCounter++;
 
     m_titleFont->Draw(r, 32, 128, "GAME OVER");
 }
 
 void GameOver::Exit(Renderer &r) {
+    tmFunction(0, 0);
+
     logger->debug(__PRETTY_FUNCTION__);
 }
 
