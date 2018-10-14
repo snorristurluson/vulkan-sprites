@@ -12,6 +12,8 @@
 #include "FontManager.h"
 #include "Font.h"
 
+static const char *const FONTNAME = "resources/montserrat/Montserrat-Bold.ttf";
+
 class FontManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -38,10 +40,11 @@ TEST_F(FontManagerTest, CanCreate) {
 
 }
 
-TEST_F(FontManagerTest, GetFont) {
+TEST_F(FontManagerTest, GetFont)
+{
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
 
     ASSERT_NE(font, nullptr);
 }
@@ -49,17 +52,17 @@ TEST_F(FontManagerTest, GetFont) {
 TEST_F(FontManagerTest, Font_GetNumGlyphs) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
     ASSERT_NE(font, nullptr);
 
     int n = font->GetNumGlyphs();
-    EXPECT_EQ(n, 10538);
+    EXPECT_EQ(n, 263);
 }
 
 TEST_F(FontManagerTest, Font_GetGlyph) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
     ASSERT_NE(font, nullptr);
 
     auto glyph = font->GetGlyph('a');
@@ -69,20 +72,20 @@ TEST_F(FontManagerTest, Font_GetGlyph) {
     auto top = glyph->GetTop();
 
     EXPECT_EQ(left, 0);
-    EXPECT_EQ(top, 7);
+    EXPECT_EQ(top, 9);
 
     auto texture = glyph->GetTexture();
     ASSERT_NE(texture, nullptr);
 
-    EXPECT_EQ(texture->GetWidth(), 7);
-    EXPECT_EQ(texture->GetHeight(), 7);
-    EXPECT_EQ(glyph->GetWidth(), 7);
+    EXPECT_EQ(texture->GetWidth(), 9);
+    EXPECT_EQ(texture->GetHeight(), 10);
+    EXPECT_EQ(glyph->GetWidth(), 9);
 }
 
 TEST_F(FontManagerTest, Font_GetGlyph_Space) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
     ASSERT_NE(font, nullptr);
 
     auto glyph = font->GetGlyph(' ');
@@ -103,17 +106,17 @@ TEST_F(FontManagerTest, Font_GetGlyph_Space) {
 TEST_F(FontManagerTest, Font_Measure) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
     auto m = font->Measure("This is a test");
 
-    EXPECT_EQ(m.width, 80);
-    EXPECT_EQ(m.height, 24);
+    EXPECT_EQ(m.width, 100);
+    EXPECT_EQ(m.height, 26);
 }
 
 TEST_F(FontManagerTest, Font_Render) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
 
     m_renderer.StartFrame();
     font->Draw(m_renderer, 0, 128, "This is a test");
@@ -126,7 +129,7 @@ TEST_F(FontManagerTest, Font_Render) {
 TEST_F(FontManagerTest, Font_Render_MultipleFrames) {
     FontManager fm(m_textureAtlas);
 
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
+    auto font = fm.GetFont(FONTNAME, 16);
 
     m_renderer.StartFrame();
     font->Draw(m_renderer, 0, 128, "This is a test");
@@ -155,8 +158,8 @@ TEST_F(FontManagerTest, Font_Render_MultipleFrames) {
 TEST_F(FontManagerTest, Font_Render_TwoFontsMultipleFrames) {
     FontManager fm(m_textureAtlas);
 
-    auto font1 = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 16);
-    auto font2 = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 32);
+    auto font1 = fm.GetFont(FONTNAME, 16);
+    auto font2 = fm.GetFont(FONTNAME, 32);
 
     m_renderer.StartFrame();
     font1->Draw(m_renderer, 0, 128, "This is a test");
