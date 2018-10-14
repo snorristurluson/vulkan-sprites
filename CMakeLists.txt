@@ -100,7 +100,7 @@ add_executable(
         samples/breakout/AppState.h
         samples/breakout/SplashScreen.cpp
         samples/breakout/SplashScreen.h
-        samples/breakout/MainMenu.cpp samples/breakout/MainMenu.h)
+        samples/breakout/MainMenu.cpp samples/breakout/MainMenu.h samples/breakout/Gameplay.cpp samples/breakout/Gameplay.h samples/breakout/GameOver.cpp samples/breakout/GameOver.h)
 target_link_libraries(breakout engine ${FREETYPE_LIBRARIES})
 
 add_executable(

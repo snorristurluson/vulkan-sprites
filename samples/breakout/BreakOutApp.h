@@ -9,6 +9,8 @@
 #include <GLFW/glfw3.h>
 #include "SplashScreen.h"
 #include "MainMenu.h"
+#include "Gameplay.h"
+#include "GameOver.h"
 
 #include <vector>
 #include <FontManager.h>
@@ -32,6 +34,8 @@ protected:
 
     SplashScreen m_splashScreen;
     MainMenu m_mainMenu;
+    Gameplay m_gameplay;
+    GameOver m_gameOver;
 
     std::vector<AppState*> m_states;
     AppState* m_currentState;

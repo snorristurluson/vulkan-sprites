@@ -32,6 +32,10 @@ void SplashScreen::Exit(Renderer &r) {
 
 void SplashScreen::HandleKey(int key, int scancode, int action, int mods) {
     if(action == GLFW_PRESS) {
-        m_app->ChangeState(MAIN_MENU);
+        if(key == GLFW_KEY_ESCAPE) {
+            m_app->ChangeState(QUIT);
+        } else {
+            m_app->ChangeState(MAIN_MENU);
+        }
     }
 }

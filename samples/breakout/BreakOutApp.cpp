@@ -16,7 +16,7 @@ namespace {
     }
 }
 
-BreakOutApp::BreakOutApp() : m_splashScreen(this), m_mainMenu(this)
+BreakOutApp::BreakOutApp() : m_splashScreen(this), m_mainMenu(this), m_gameplay(this), m_gameOver(this)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -24,7 +24,8 @@ BreakOutApp::BreakOutApp() : m_splashScreen(this), m_mainMenu(this)
     m_states.resize(NUM_STATES);
     m_states[SPLASH_SCREEN] = &m_splashScreen;
     m_states[MAIN_MENU] = &m_mainMenu;
-
+    m_states[GAMEPLAY] = &m_gameplay;
+    m_states[GAME_OVER] = &m_gameOver;
 }
 
 void BreakOutApp::CreateWindow(int width, int height)
@@ -51,15 +52,19 @@ void BreakOutApp::Run()
     m_nextState = m_currentState;
     m_currentState->Enter(r);
 
-    while (!glfwWindowShouldClose(m_window)) {
+    while (!glfwWindowShouldClose(m_window) && m_currentState) {
         glfwPollEvents();
         if(r.StartFrame()) {
             while(m_nextState != m_currentState) {
                 m_currentState->Exit(r);
-                m_nextState->Enter(r);
+                if(m_nextState) {
+                    m_nextState->Enter(r);
+                }
                 m_currentState = m_nextState;
             }
-            m_currentState->Render(r);
+            if(m_currentState) {
+                m_currentState->Render(r);
+            }
             r.EndFrame();
         }
     }
@@ -67,7 +72,11 @@ void BreakOutApp::Run()
 }
 
 void BreakOutApp::ChangeState(int newState) {
-    m_nextState = m_states[newState];
+    if(newState == QUIT) {
+        m_nextState = nullptr;
+    } else {
+        m_nextState = m_states[newState];
+    }
 }
 
 void BreakOutApp::HandleKey(GLFWwindow *window, int key, int scancode, int action, int mods) {

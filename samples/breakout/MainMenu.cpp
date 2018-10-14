@@ -35,6 +35,13 @@ void MainMenu::Exit(Renderer &r) {
 
 void MainMenu::HandleKey(int key, int scancode, int action, int mods) {
     if(action == GLFW_PRESS) {
-        m_app->ChangeState(SPLASH_SCREEN);
+        switch(key) {
+            case GLFW_KEY_1:
+                m_app->ChangeState(GAMEPLAY);
+                break;
+            case GLFW_KEY_2:
+                m_app->ChangeState(SPLASH_SCREEN);
+                break;
+        }
     }
 }

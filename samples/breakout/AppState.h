@@ -34,8 +34,12 @@ protected:
 typedef enum {
     SPLASH_SCREEN,
     MAIN_MENU,
+    GAMEPLAY,
+    GAME_OVER,
 
-    NUM_STATES
+    NUM_STATES,
+
+    QUIT
 } State;
 
 #endif //VULKAN_SPRITES_APPSTATE_H
