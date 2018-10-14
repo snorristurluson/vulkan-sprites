@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <map>
+#include <string>
 
 class TextureAtlas;
 

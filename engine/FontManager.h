@@ -10,6 +10,7 @@
 
 #include "Font.h"
 #include <memory>
+#include <string>
 
 class TextureAtlas;
 
