@@ -3,17 +3,23 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 
 add_library(
         engine
+        ../extern/stb_image.h
         Renderer.cpp Renderer.h
         Vertex.cpp Vertex.h
         Texture.cpp Texture.h
-        ../extern/stb_image.h
         ShaderLib.cpp ShaderLib.h
         DebugMessenger.cpp DebugMessenger.h
         Logger.cpp Logger.h
         AreaAllocator.cpp AreaAllocator.h
         AreaList.cpp AreaList.h
         Area.cpp Area.h
-        TextureAtlas.cpp TextureAtlas.h ITexture.h AtlasTexture.cpp AtlasTexture.h FontManager.cpp FontManager.h Glyph.cpp Glyph.h Font.cpp Font.h)
+        TextureAtlas.cpp TextureAtlas.h
+        ITexture.h
+        AtlasTexture.cpp AtlasTexture.h
+        FontManager.cpp FontManager.h
+        Glyph.cpp Glyph.h
+        Font.cpp Font.h
+)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES
