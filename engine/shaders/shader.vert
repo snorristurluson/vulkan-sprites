@@ -17,7 +17,9 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = vec4(inPosition.x / ubo.extent.x - 1.0f, inPosition.y / ubo.extent.y - 1.0f, 0.0, 1.0);
+    float halfWidth = ubo.extent.x / 2.0f;
+    float halfHeight = ubo.extent.y / 2.0f;
+    gl_Position = vec4(inPosition.x / halfWidth - 1.0f, inPosition.y / halfHeight - 1.0f, 0.0, 1.0);
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }
