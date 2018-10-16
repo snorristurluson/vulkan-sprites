@@ -27,32 +27,6 @@ endif(UNIX)
 
 set(GLSL_VALIDATOR "${VULKAN_DIR}/bin/glslangValidator")
 
-
-# Download and unpack googletest at configure time
-configure_file(CMakeLists-googletest.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-
-# Prevent overriding the parent project's compiler/linker
-# settings on Windows
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-# Add googletest directly to our build. This defines
-# the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-        ${CMAKE_BINARY_DIR}/googletest-build
-        EXCLUDE_FROM_ALL)
-
 add_subdirectory(engine)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -132,11 +106,12 @@ target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(
         Renderer_test
+        engine/test_main.cpp
         engine/Area_test.cpp
         engine/AreaAllocator_test.cpp
         engine/AreaList_test.cpp
         engine/Renderer_test.cpp
         engine/TextureAtlas_test.cpp
         engine/FontManager_test.cpp
-        engine/test_main.cpp)
-target_link_libraries(Renderer_test gtest_main engine ${FREETYPE_LIBRARIES})
+)
+target_link_libraries(Renderer_test engine ${FREETYPE_LIBRARIES})
