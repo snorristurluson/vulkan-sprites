@@ -2,87 +2,85 @@
 // Created by Snorri Sturluson on 23/09/2018.
 //
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 #include "AreaAllocator.h"
 
-TEST(AreaAllocator, CanCreate) {
-    AreaAllocator aa;
-}
+TEST_CASE("AreaAllocator") {
+    SECTION("constructor") {
+        AreaAllocator aa;
+    }
 
-TEST(AreaAllocator, Initialize) {
-    AreaAllocator aa;
+    SECTION("Initialize") {
+        AreaAllocator aa;
 
-    aa.Initialize(2048, 2048);
-    EXPECT_EQ(aa.GetTotalWidth(), 2048);
-    EXPECT_EQ(aa.GetTotalHeight(), 2048);
-    EXPECT_EQ(aa.GetFreeAreaCount(), 1);
-    EXPECT_EQ(aa.GetFreeAreaSize(), 2048*2048);
-    EXPECT_EQ(aa.GetAllocatedAreaCount(), 0);
-    EXPECT_EQ(aa.GetAllocatedAreaSize(), 0);
-}
+        aa.Initialize(2048, 2048);
 
-TEST(AreaAllocator, Allocate) {
-    AreaAllocator aa;
-    aa.Initialize(2048, 2048);
-    auto sizeBefore = aa.GetFreeAreaSize();
+        REQUIRE(aa.GetTotalWidth() == 2048);
+        REQUIRE(aa.GetTotalHeight() == 2048);
+        REQUIRE(aa.GetFreeAreaCount() == 1);
+        REQUIRE(aa.GetFreeAreaSize() == 2048*2048);
+        REQUIRE(aa.GetAllocatedAreaCount() == 0);
+        REQUIRE(aa.GetAllocatedAreaSize() == 0);
+    }
 
-    Area* a = aa.Allocate(64, 64);
-    EXPECT_EQ(a->width, 64);
-    EXPECT_EQ(a->height, 64);
+    SECTION("Allocate") {
+        AreaAllocator aa;
+        aa.Initialize(2048, 2048);
 
-    auto sizeAfter = aa.GetFreeAreaSize();
-    EXPECT_EQ(sizeAfter, sizeBefore - 64*64);
+        SECTION("simple case") {
+            auto sizeBefore = aa.GetFreeAreaSize();
 
-    EXPECT_EQ(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize(), aa.GetTotalAreaSize());
-}
+            Area* a = aa.Allocate(64, 64);
+            REQUIRE(a->width == 64);
+            REQUIRE(a->height == 64);
 
-TEST(AreaAllocator, Free) {
-    AreaAllocator aa;
-    aa.Initialize(2048, 2048);
+            auto sizeAfter = aa.GetFreeAreaSize();
+            REQUIRE(sizeAfter == sizeBefore - 64*64);
 
-    Area* a = aa.Allocate(64, 64);
-    aa.Free(a);
+            REQUIRE(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize() == aa.GetTotalAreaSize());
+        }
 
-    EXPECT_EQ(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize(), aa.GetTotalAreaSize());
-}
+        SECTION("too large returns nullptr") {
+            auto sizeBefore = aa.GetFreeAreaSize();
+            Area* a = aa.Allocate(4096, 4096);
 
-TEST(AreaAllocator, AllocateTooLargeReturnsNullPtr) {
-    AreaAllocator aa;
-    aa.Initialize(32, 32);
+            REQUIRE(!a);
+            REQUIRE(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize() == aa.GetTotalAreaSize());
+        }
 
-    Area* a = aa.Allocate(64, 64);
+        SECTION("four quadrants") {
+            auto a1 = aa.Allocate(1024, 1024);
+            auto a2 = aa.Allocate(1024, 1024);
+            auto a3 = aa.Allocate(1024, 1024);
+            auto a4 = aa.Allocate(1024, 1024);
 
-    EXPECT_EQ(a, nullptr);
-    EXPECT_EQ(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize(), aa.GetTotalAreaSize());
-}
+            REQUIRE(a1);
+            REQUIRE(a2);
+            REQUIRE(a3);
+            REQUIRE(a4);
 
-TEST(AreaAllocator, AllocateFourQuadrants) {
-    AreaAllocator aa;
-    aa.Initialize(64, 64);
+            REQUIRE(aa.GetFreeAreaSize() == 0);
+            REQUIRE(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize() == aa.GetTotalAreaSize());
+        }
 
-    auto a1 = aa.Allocate(32, 32);
-    auto a2 = aa.Allocate(32, 32);
-    auto a3 = aa.Allocate(32, 32);
-    auto a4 = aa.Allocate(32, 32);
+        SECTION("collapse areas") {
+            auto a1 = aa.Allocate(1024, 1024);
+            aa.Free(a1);
 
-    EXPECT_NE(a1, nullptr);
-    EXPECT_NE(a2, nullptr);
-    EXPECT_NE(a3, nullptr);
-    EXPECT_NE(a4, nullptr);
+            auto a2 = aa.Allocate(2048, 2048);
+            REQUIRE(a2);
+            REQUIRE(aa.GetFreeAreaSize() == 0);
+            REQUIRE(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize() == aa.GetTotalAreaSize());
+        }
+    }
 
-    EXPECT_EQ(aa.GetFreeAreaSize(), 0);
-    EXPECT_EQ(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize(), aa.GetTotalAreaSize());
-}
+    SECTION("Free") {
+        AreaAllocator aa;
+        aa.Initialize(2048, 2048);
 
-TEST(AreaAllocator, CollapseAreas) {
-    AreaAllocator aa;
-    aa.Initialize(64, 64);
+        Area* a = aa.Allocate(64, 64);
+        aa.Free(a);
 
-    auto a1 = aa.Allocate(32, 32);
-    aa.Free(a1);
-
-    auto a2 = aa.Allocate(64, 64);
-    EXPECT_NE(a2, nullptr);
-    EXPECT_EQ(aa.GetFreeAreaSize(), 0);
-    EXPECT_EQ(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize(), aa.GetTotalAreaSize());
+        REQUIRE(aa.GetFreeAreaSize() + aa.GetAllocatedAreaSize() == aa.GetTotalAreaSize());
+    }
 }

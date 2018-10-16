@@ -138,5 +138,5 @@ add_executable(
         engine/Renderer_test.cpp
         engine/TextureAtlas_test.cpp
         engine/FontManager_test.cpp
-)
+        engine/test_main.cpp)
 target_link_libraries(Renderer_test gtest_main engine ${FREETYPE_LIBRARIES})

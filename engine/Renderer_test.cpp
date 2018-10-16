@@ -2,192 +2,190 @@
 // Created by snorri on 25.8.2018.
 //
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "Renderer.h"
 #include "Texture.h"
 
-class RendererTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        m_window = glfwCreateWindow(800, 600, "RendererTest", nullptr, nullptr);
+TEST_CASE("Renderer basics") {
+    SECTION("can create") {
+        Renderer r;
     }
 
-    void TearDown() override {
-        glfwDestroyWindow(m_window);
+    SECTION("fresh instance is uninitialized") {
+        Renderer r;
+        REQUIRE(!r.IsInitialized());
+        REQUIRE(!r.GetDebugMessenger());
+    }
+}
+
+TEST_CASE("Renderer") {
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    auto window = glfwCreateWindow(800, 600, "TextureAtlasTest", nullptr, nullptr);
+
+    SECTION("Initialize") {
+        SECTION("without validation") {
+            Renderer r;
+            r.Initialize(window, Renderer::DISABLE_VALIDATION);
+            REQUIRE(r.IsInitialized());
+            REQUIRE(!r.GetDebugMessenger());
+        }
+
+        SECTION("with validation") {
+            Renderer r;
+            r.Initialize(window, Renderer::ENABLE_VALIDATION);
+            REQUIRE(r.IsInitialized());
+            REQUIRE(r.GetDebugMessenger());
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("multiple calls throw") {
+            Renderer r;
+            r.Initialize(window, Renderer::ENABLE_VALIDATION);
+            REQUIRE_THROWS_AS(r.Initialize(window, Renderer::ENABLE_VALIDATION), std::runtime_error);
+        }
     }
 
-    GLFWwindow *m_window;
-};
-
-TEST_F(RendererTest, CanCreate) {
     Renderer r;
-}
+    r.Initialize(window, Renderer::ENABLE_VALIDATION);
 
-TEST_F(RendererTest, FreshInstanceIsUninitialized) {
-    Renderer r;
-    EXPECT_FALSE(r.IsInitialized());
-    EXPECT_EQ(r.GetDebugMessenger(), nullptr);
-}
+    SECTION("SetClearColor") {
+        glm::vec4 color {0.1f, 0.2f, 0.3f, 0.4f};
+        r.SetClearColor(color);
+        auto returned = r.GetClearColor();
+        REQUIRE(returned == color);
 
-TEST_F(RendererTest, Initialize_DisableValidation) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::DISABLE_VALIDATION);
-    EXPECT_TRUE(r.IsInitialized());
-    EXPECT_EQ(r.GetDebugMessenger(), nullptr);
-}
+        r.WaitUntilDeviceIdle();
+        REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+    }
 
-TEST_F(RendererTest, Initialize_EnableValidation) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    EXPECT_TRUE(r.IsInitialized());
-    ASSERT_NE(r.GetDebugMessenger(), nullptr);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
+    SECTION("CreateTexture") {
+        SECTION("simple case") {
+            auto t = r.CreateTexture("resources/texture.jpg");
+            REQUIRE(t);
+            REQUIRE(t->GetWidth() == 512);
+            REQUIRE(t->GetHeight() == 512);
 
-TEST_F(RendererTest, Initialize_MultipleCallsThrow) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    ASSERT_THROW(r.Initialize(m_window, Renderer::ENABLE_VALIDATION), std::runtime_error);
-}
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
 
-TEST_F(RendererTest, SetClearColor) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+        SECTION("in frame") {
+            r.StartFrame();
+            auto t = r.CreateTexture("resources/texture.jpg");
+            r.EndFrame();
 
-    glm::vec4 color {0.1f, 0.2f, 0.3f, 0.4f};
-    r.SetClearColor(color);
-    auto returned = r.GetClearColor();
-    EXPECT_EQ(returned, color);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
+            REQUIRE(t);
+            REQUIRE(t->GetWidth() == 512);
+            REQUIRE(t->GetHeight() == 512);
 
-TEST_F(RendererTest, CreateTexture) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    auto t = r.CreateTexture("resources/texture.jpg");
-    ASSERT_NE(t.get(), nullptr);
-    EXPECT_EQ(t->GetWidth(), 512);
-    EXPECT_EQ(t->GetHeight(), 512);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+    }
 
-TEST_F(RendererTest, StartFrame) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    r.StartFrame();
-    r.EndFrame();
+    SECTION("StartFrame") {
+        r.StartFrame();
+        r.EndFrame();
+        REQUIRE(r.GetNumDrawCommands() == 0);
+
+        r.WaitUntilDeviceIdle();
+        REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+    }
+
+    SECTION("DrawSprite") {
+        SECTION("throws outside of frame") {
+            REQUIRE_THROWS_AS(r.DrawSprite(0, 0, 100, 100), std::runtime_error);
+        }
+
+        SECTION("throws outside of frame (after EndFrame)") {
+            r.StartFrame();
+            r.EndFrame();
+            REQUIRE_THROWS_AS(r.DrawSprite(0, 0, 100, 100), std::runtime_error);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("simple case") {
+            r.StartFrame();
+            r.DrawSprite(0, 0, 100, 100);
+
+            REQUIRE(r.GetNumIndices() == 6);
+            REQUIRE(r.GetNumVertices() == 4);
+
+            r.EndFrame();
+            REQUIRE(r.GetNumDrawCommands() == 1);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("multiple sprites, one draw command") {
+            r.StartFrame();
+            r.DrawSprite(0, 0, 100, 100);
+            r.DrawSprite(10, 10, 100, 100);
+            r.DrawSprite(20, 20, 100, 100);
+            r.EndFrame();
+
+            REQUIRE(r.GetNumDrawCommands() == 1);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("one draw command per texture switch") {
+            auto t1 = r.CreateTexture("resources/1.png");
+            auto t2 = r.CreateTexture("resources/2.png");
+
+            r.StartFrame();
+            r.SetTexture(t1);
+            r.DrawSprite(0, 0, 100, 100);
+            r.DrawSprite(0, 100, 100, 100);
+            r.SetTexture(t2);
+            r.DrawSprite(10, 10, 100, 100);
+            r.DrawSprite(10, 110, 100, 100);
+            r.SetTexture(t1);
+            r.DrawSprite(0, 0, 100, 100);
+            r.DrawSprite(0, 100, 100, 100);
+            r.EndFrame();
+
+            REQUIRE(r.GetNumDrawCommands() == 3);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+    }
+
+    SECTION("SetTexture") {
+        SECTION("simple case") {
+            auto t = r.CreateTexture("resources/texture.jpg");
+
+            r.StartFrame();
+            r.SetTexture(t);
+            r.DrawSprite(0, 0, 100, 100);
+            r.EndFrame();
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("nullptr") {
+            r.StartFrame();
+            r.SetTexture(nullptr);
+            r.DrawSprite(0, 0, 100, 100);
+            r.EndFrame();
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+    }
+
     r.WaitUntilDeviceIdle();
-    EXPECT_EQ(r.GetNumDrawCommands(), 0);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
+    REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
 
-TEST_F(RendererTest, DrawSprite_ThrowsOutsideOfFrame) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    ASSERT_THROW(r.DrawSprite(0, 0, 100, 100), std::runtime_error);
-}
-
-TEST_F(RendererTest, DrawSprite_ThrowsOutsideOfFrame2) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    r.StartFrame();
-    r.EndFrame();
-    ASSERT_THROW(r.DrawSprite(0, 0, 100, 100), std::runtime_error);
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, DrawSprite) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    r.StartFrame();
-    r.DrawSprite(0, 0, 100, 100);
-    EXPECT_EQ(r.GetNumIndices(), 6);
-    EXPECT_EQ(r.GetNumVertices(), 4);
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetNumDrawCommands(), 1);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, DrawSprite_MultipleSpritesOneDrawCommand) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    r.StartFrame();
-    r.DrawSprite(0, 0, 100, 100);
-    r.DrawSprite(10, 10, 100, 100);
-    r.DrawSprite(20, 20, 100, 100);
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetNumDrawCommands(), 1);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, SetTexture) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-
-    auto t = r.CreateTexture("resources/texture.jpg");
-
-    r.StartFrame();
-    r.SetTexture(t);
-    r.DrawSprite(0, 0, 100, 100);
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, SetTexture_nullptr) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-
-    auto t = r.CreateTexture("resources/texture.jpg");
-
-    r.StartFrame();
-    r.SetTexture(nullptr);
-    r.DrawSprite(0, 0, 100, 100);
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-
-    auto t = r.CreateTexture("resources/texture.jpg");
-
-    r.StartFrame();
-    r.DrawSprite(0, 0, 100, 100);
-    r.SetTexture(t);
-    r.DrawSprite(10, 10, 100, 100);
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    EXPECT_EQ(r.GetNumDrawCommands(), 2);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
-}
-
-TEST_F(RendererTest, CreateTexture_InFrame) {
-    Renderer r;
-    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
-    r.StartFrame();
-    auto t = r.CreateTexture("resources/texture.jpg");
-    r.EndFrame();
-    r.WaitUntilDeviceIdle();
-
-    ASSERT_NE(t.get(), nullptr);
-    EXPECT_EQ(t->GetWidth(), 512);
-    EXPECT_EQ(t->GetHeight(), 512);
-    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+    glfwDestroyWindow(window);
 }
