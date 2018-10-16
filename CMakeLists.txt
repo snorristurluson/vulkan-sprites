@@ -95,17 +95,37 @@ add_executable(
 target_link_libraries(textureatlas engine)
 target_link_libraries(textureatlas Threads::Threads stdc++fs)
 
-add_executable(
-        breakout
-        samples/breakout/main.cpp
+add_library(breakoutlib
         samples/breakout/BreakOutApp.cpp
         samples/breakout/BreakOutApp.h
         samples/breakout/AppState.cpp
         samples/breakout/AppState.h
         samples/breakout/SplashScreen.cpp
         samples/breakout/SplashScreen.h
-        samples/breakout/MainMenu.cpp samples/breakout/MainMenu.h samples/breakout/Gameplay.cpp samples/breakout/Gameplay.h samples/breakout/GameOver.cpp samples/breakout/GameOver.h)
-target_link_libraries(breakout engine ${FREETYPE_LIBRARIES})
+        samples/breakout/MainMenu.cpp
+        samples/breakout/MainMenu.h
+        samples/breakout/Gameplay.cpp
+        samples/breakout/Gameplay.h
+        samples/breakout/GameOver.cpp
+        samples/breakout/GameOver.h
+        samples/breakout/Movable.cpp
+        samples/breakout/Movable.h
+        samples/breakout/Paddle.cpp
+        samples/breakout/Paddle.h
+        samples/breakout/Ball.cpp
+        samples/breakout/Ball.h)
+
+add_executable(
+        breakout
+        samples/breakout/main.cpp
+)
+target_link_libraries(breakout breakoutlib engine ${FREETYPE_LIBRARIES})
+
+add_executable(
+        breakout_test
+        samples/breakout/Paddle_test.cpp
+        samples/breakout/Ball_test.cpp)
+target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES} gtest_main)
 
 add_executable(
         Renderer_test
@@ -113,5 +133,7 @@ add_executable(
         engine/AreaAllocator_test.cpp
         engine/AreaList_test.cpp
         engine/Renderer_test.cpp
-        engine/TextureAtlas_test.cpp engine/FontManager_test.cpp)
+        engine/TextureAtlas_test.cpp
+        engine/FontManager_test.cpp
+)
 target_link_libraries(Renderer_test gtest_main engine ${FREETYPE_LIBRARIES})
