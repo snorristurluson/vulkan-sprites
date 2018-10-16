@@ -105,7 +105,7 @@ add_executable(
 target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(
-        Renderer_test
+        engine_test
         engine/test_main.cpp
         engine/Area_test.cpp
         engine/AreaAllocator_test.cpp
@@ -114,4 +114,4 @@ add_executable(
         engine/TextureAtlas_test.cpp
         engine/FontManager_test.cpp
 )
-target_link_libraries(Renderer_test engine ${FREETYPE_LIBRARIES})
+target_link_libraries(engine_test engine ${FREETYPE_LIBRARIES})
