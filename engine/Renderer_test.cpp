@@ -146,6 +146,21 @@ TEST_F(RendererTest, SetTexture) {
     EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
 }
 
+TEST_F(RendererTest, SetTexture_nullptr) {
+    Renderer r;
+    r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+
+    auto t = r.CreateTexture("resources/texture.jpg");
+
+    r.StartFrame();
+    r.SetTexture(nullptr);
+    r.DrawSprite(0, 0, 100, 100);
+    r.EndFrame();
+    r.WaitUntilDeviceIdle();
+
+    EXPECT_EQ(r.GetDebugMessenger()->GetErrorAndWarningCount(), 0);
+}
+
 TEST_F(RendererTest, DrawSprite_OneDrawCommandPerTexture) {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);

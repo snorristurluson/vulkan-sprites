@@ -128,10 +128,13 @@ namespace {
         VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
         for (const auto &availablePresentMode : availablePresentModes) {
-            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+            logger->debug("availablePresentMode {}", availablePresentMode);
+            if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
+                logger->debug("Found VK_PRESENT_MODE_FIFO_KHR");
                 return availablePresentMode;
             } else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
                 bestMode = availablePresentMode;
+                logger->debug("Found VK_PRESENT_MODE_IMMEDIATE_KHR");
             }
         }
 
@@ -898,6 +901,9 @@ void Renderer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkI
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             break;
+
+        default:
+            throw std::runtime_error("unsupported image transition");
     }
 
     switch (newLayout) {
@@ -910,6 +916,9 @@ void Renderer::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkI
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             break;
+
+        default:
+            throw std::runtime_error("unsupported image transition");
     }
     vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     endSingleTimeCommands(commandBuffer);
@@ -1623,6 +1632,10 @@ VkDeviceSize Renderer::GetNumVertices() {
 }
 
 void Renderer::SetTexture(std::shared_ptr<ITexture> texture) {
+    if(!texture) {
+        texture = m_defaultTexture;
+    }
+
     if(texture->GetDescriptorSet() != m_currentDescriptorSet) {
         queueDrawCommand();
         m_currentDescriptorSet = texture->GetDescriptorSet();
