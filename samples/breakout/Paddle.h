@@ -11,7 +11,6 @@
 
 class Paddle : public Movable {
 public:
-    Paddle() : m_minX(-10000), m_maxX(10000) {}
     void SetWidth(float w);
     float GetWidth() const;
 
@@ -25,10 +24,10 @@ public:
     void SetBounds(float min, float max);
 
 protected:
-    float m_width;
-    float m_height;
-    float m_minX;
-    float m_maxX;
+    float m_width = 1;
+    float m_height = 1;
+    float m_minX = -10000;
+    float m_maxX = 10000;
 };
 
 

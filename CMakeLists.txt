@@ -62,6 +62,7 @@ find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
 include_directories(engine)
+include_directories(extern)
 
 add_executable(
         first
@@ -123,9 +124,11 @@ target_link_libraries(breakout breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(
         breakout_test
+        samples/breakout/test_main.cpp
         samples/breakout/Paddle_test.cpp
-        samples/breakout/Ball_test.cpp)
-target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES} gtest_main)
+        samples/breakout/Ball_test.cpp
+)
+target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(
         Renderer_test

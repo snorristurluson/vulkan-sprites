@@ -2,31 +2,31 @@
 // Created by snorri on 15.10.2018.
 //
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 #include <glm/vec2.hpp>
 #include "Ball.h"
 #include "Paddle.h"
 
-TEST(Ball, CanCreate) {
+TEST_CASE("Ball constructor", "[Ball]") {
     Ball b;
 }
 
-TEST(Ball, SetRadius) {
+TEST_CASE("Ball::SetRadius", "[Ball]") {
     Ball b;
     b.SetRadius(4.0f);
-    EXPECT_EQ(b.GetRadius(), 4.0f);
+    REQUIRE(b.GetRadius() == 4.0f);
 }
 
-TEST(Ball, SetPosition) {
+TEST_CASE("Ball::SetPosition", "[Ball]") {
     Ball b;
 
     b.SetPosition({3.14f, 42.0f});
 
     glm::vec2 expected {3.14f, 42.0f};
-    EXPECT_EQ(b.GetPosition(), expected);
+    REQUIRE(b.GetPosition() == expected);
 }
 
-TEST(Ball, CollideWithPaddle_Hit) {
+TEST_CASE("Ball::CollideWithPaddle hits", "[Ball]") {
     Ball b;
     b.SetRadius(2.0f);
     b.SetPosition({0.0f, 1.0f});
@@ -38,10 +38,10 @@ TEST(Ball, CollideWithPaddle_Hit) {
 
     b.CollideWithPaddle(p);
 
-    EXPECT_EQ(b.GetVelocity().y, -1.0f);
+    REQUIRE(b.GetVelocity().y == -1.0f);
 }
 
-TEST(Ball, CollideWithPaddle_Miss_Right) {
+TEST_CASE("Ball::CollideWithPaddle misses when ball is to the right", "[Ball]") {
     Ball b;
     b.SetRadius(2.0f);
     b.SetPosition({50.0f, 1.0f});
@@ -53,10 +53,10 @@ TEST(Ball, CollideWithPaddle_Miss_Right) {
 
     b.CollideWithPaddle(p);
 
-    EXPECT_EQ(b.GetVelocity().y, 1.0f);
+    REQUIRE(b.GetVelocity().y == 1.0f);
 }
 
-TEST(Ball, CollideWithPaddle_Miss_Left) {
+TEST_CASE("Ball::CollideWithPaddle misses when ball is to the left", "[Ball]") {
     Ball b;
     b.SetRadius(2.0f);
     b.SetPosition({-50.0f, 1.0f});
@@ -68,10 +68,10 @@ TEST(Ball, CollideWithPaddle_Miss_Left) {
 
     b.CollideWithPaddle(p);
 
-    EXPECT_EQ(b.GetVelocity().y, 1.0f);
+    REQUIRE(b.GetVelocity().y == 1.0f);
 }
 
-TEST(Ball, CollideWithPaddle_Miss_Above) {
+TEST_CASE("Ball::CollideWithPaddle misses when ball is above", "[Ball]") {
     Ball b;
     b.SetRadius(2.0f);
     b.SetPosition({0.0f, -10.0f});
@@ -83,10 +83,11 @@ TEST(Ball, CollideWithPaddle_Miss_Above) {
 
     b.CollideWithPaddle(p);
 
-    EXPECT_EQ(b.GetVelocity().y, 1.0f);
+    REQUIRE(b.GetVelocity().y == 1.0f);
 }
 
-TEST(Ball, CollideWithPaddle_Miss_MovingAway) {
+
+TEST_CASE("Ball::CollideWithPaddle misses when ball is moving away", "[Ball]") {
     Ball b;
     b.SetRadius(2.0f);
     b.SetPosition({0.0f, 1.0f});
@@ -98,5 +99,5 @@ TEST(Ball, CollideWithPaddle_Miss_MovingAway) {
 
     b.CollideWithPaddle(p);
 
-    EXPECT_EQ(b.GetVelocity().y, -1.0f);
+    REQUIRE(b.GetVelocity().y == -1.0f);
 }
