@@ -54,3 +54,7 @@ void MainMenu::HandleKey(int key, int scancode, int action, int mods) {
         }
     }
 }
+
+void MainMenu::HandleCursorPosition(double xpos, double ypos) {
+
+}

@@ -23,10 +23,12 @@ public:
     void Run();
 
     void ChangeState(int newState) override;
-
     std::shared_ptr<Font> GetFont(int pt) override;
 
+    GLFWwindow *GetWindow() override;
+
     void HandleKey(GLFWwindow *window, int key, int scancode, int action, int mods);
+    void HandleCursorPosition(GLFWwindow* window, double xpos, double ypos);
 
 protected:
     GLFWwindow *m_window;

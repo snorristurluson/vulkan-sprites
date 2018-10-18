@@ -18,6 +18,8 @@ public:
     void Exit(Renderer &r) override;
     void HandleKey(int key, int scancode, int action, int mods) override;
 
+    void HandleCursorPosition(double xpos, double ypos) override;
+
 protected:
     int m_frameCounter;
 

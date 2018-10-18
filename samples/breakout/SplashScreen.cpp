@@ -48,3 +48,7 @@ void SplashScreen::HandleKey(int key, int scancode, int action, int mods) {
         }
     }
 }
+
+void SplashScreen::HandleCursorPosition(double xpos, double ypos) {
+
+}

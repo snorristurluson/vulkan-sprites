@@ -88,7 +88,7 @@ add_library(breakoutlib
         samples/breakout/Paddle.cpp
         samples/breakout/Paddle.h
         samples/breakout/Ball.cpp
-        samples/breakout/Ball.h)
+        samples/breakout/Ball.h samples/breakout/BrickCollection.cpp samples/breakout/BrickCollection.h)
 
 add_executable(
         breakout
@@ -101,7 +101,7 @@ add_executable(
         samples/breakout/test_main.cpp
         samples/breakout/Paddle_test.cpp
         samples/breakout/Ball_test.cpp
-)
+        samples/breakout/BrickCollection_test.cpp)
 target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(

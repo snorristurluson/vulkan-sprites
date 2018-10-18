@@ -15,6 +15,11 @@ namespace {
         BreakOutApp* app = reinterpret_cast<BreakOutApp*>(glfwGetWindowUserPointer(window));
         app->HandleKey(window, key, scancode, action, mods);
     }
+
+    void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
+        BreakOutApp* app = reinterpret_cast<BreakOutApp*>(glfwGetWindowUserPointer(window));
+        app->HandleCursorPosition(window, xpos, ypos);
+    }
 }
 
 BreakOutApp::BreakOutApp() : m_splashScreen(this), m_mainMenu(this), m_gameplay(this), m_gameOver(this)
@@ -34,6 +39,7 @@ void BreakOutApp::CreateWindow(int width, int height)
     m_window = glfwCreateWindow(width, height, "Vulkan BreakOut", nullptr, nullptr);
     glfwSetWindowUserPointer(m_window, this);
     glfwSetKeyCallback(m_window, keyCallback);
+    glfwSetCursorPosCallback(m_window, cursorPositionCallback);
 }
 
 void BreakOutApp::Run()
@@ -87,6 +93,14 @@ void BreakOutApp::HandleKey(GLFWwindow *window, int key, int scancode, int actio
     m_currentState->HandleKey(key, scancode, action, mods);
 }
 
+void BreakOutApp::HandleCursorPosition(GLFWwindow *window, double xpos, double ypos) {
+    m_currentState->HandleCursorPosition(xpos, ypos);
+}
+
 std::shared_ptr<Font> BreakOutApp::GetFont(int pt) {
     return m_fontManager->GetFont("resources/montserrat/Montserrat-Bold.ttf", pt);
+}
+
+GLFWwindow *BreakOutApp::GetWindow() {
+    return m_window;
 }

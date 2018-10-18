@@ -9,6 +9,7 @@
 #include "AppState.h"
 #include "Paddle.h"
 #include "Ball.h"
+#include "BrickCollection.h"
 
 class Gameplay : public AppState {
 public:
@@ -20,6 +21,8 @@ public:
     void Exit(Renderer &r) override;
     void HandleKey(int key, int scancode, int action, int mods) override;
 
+    void HandleCursorPosition(double xpos, double ypos) override;
+
 protected:
     int m_frameCounter;
     std::shared_ptr<Font> m_titleFont;
@@ -28,6 +31,8 @@ protected:
     float m_paddleSpeed;
 
     Ball m_ball;
+    
+    BrickCollection m_bricks;
 
     bool m_leftPressed;
     bool m_rightPressed;

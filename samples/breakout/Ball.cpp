@@ -2,7 +2,9 @@
 // Created by snorri on 15.10.2018.
 //
 
+#include <cmath>
 #include "Ball.h"
+#include "BrickCollection.h"
 
 Ball::Ball() :
     m_radius(1.0f),
@@ -34,7 +36,7 @@ void Ball::CollideWithPaddle(const Paddle &p) {
     if(m_position.y + m_radius < paddlePos.y + paddleHalfHeight) {
         return;
     }
-    if(m_position.y > paddlePos.y && m_velocity.y < 0.0f) {
+    if(m_position.y > paddlePos.y && m_velocity.y > 0.0f) {
         return;
     }
     m_velocity.y *= -1.0f;
@@ -75,4 +77,30 @@ void Ball::Update(float td) {
         m_position.y = m_maxY;
         m_velocity.y *= -1.0f;
     }
+}
+
+bool Ball::CollideWithBrick(const Brick &brick) {
+    auto halfWidth = brick.width / 2.0f;
+    auto halfHeight = brick.height / 2.0f;
+    if(m_position.x + m_radius < brick.pos.x - halfWidth) {
+        return false;
+    }
+    if(m_position.x - m_radius > brick.pos.x + halfWidth) {
+        return false;
+    }
+    if(m_position.y + m_radius < brick.pos.y - halfHeight) {
+        return false;
+    }
+    if(m_position.y - m_radius > brick.pos.y + halfWidth) {
+        return false;
+    }
+    auto dx = fabs(m_position.x - brick.pos.x);
+    auto dy = fabs(m_position.y - brick.pos.y);
+
+    if(dx > dy) {
+        m_velocity.x *= -1.0f;
+    } else {
+        m_velocity.y *= -1.0f;
+    }
+    return true;
 }

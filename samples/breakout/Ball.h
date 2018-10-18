@@ -9,6 +9,8 @@
 #include "Movable.h"
 #include "Paddle.h"
 
+class Brick;
+
 class Ball : public Movable {
 public:
     Ball();
@@ -19,6 +21,7 @@ public:
     void SetBounds(float minX, float minY, float maxX, float maxY);
 
     void CollideWithPaddle(const Paddle& p);
+    bool CollideWithBrick(const Brick& brick);
 
     void Render(Renderer &r);
 

@@ -6,6 +6,7 @@
 #include <glm/vec2.hpp>
 #include "Ball.h"
 #include "Paddle.h"
+#include "BrickCollection.h"
 
 TEST_CASE("Ball") {
     SECTION("constructor") {
@@ -30,8 +31,8 @@ TEST_CASE("Ball") {
         SECTION("hits") {
             Ball b;
             b.SetRadius(2.0f);
-            b.SetPosition({0.0f, 1.0f});
-            b.SetVelocity({0.0f, 1.0f});
+            b.SetPosition({0.0f, 1.5f});
+            b.SetVelocity({0.0f, -1.0f});
 
             Paddle p;
             p.SetPosition({0.0f, 0.0f});
@@ -39,7 +40,7 @@ TEST_CASE("Ball") {
 
             b.CollideWithPaddle(p);
 
-            REQUIRE(b.GetVelocity().y == -1.0f);
+            REQUIRE(b.GetVelocity().y == 1.0f);
         }
         SECTION("misses when ball is to the right") {
             Ball b;
@@ -91,7 +92,7 @@ TEST_CASE("Ball") {
             Ball b;
             b.SetRadius(2.0f);
             b.SetPosition({0.0f, 1.0f});
-            b.SetVelocity({0.0f, -1.0f});
+            b.SetVelocity({0.0f, 1.0f});
 
             Paddle p;
             p.SetPosition({0.0f, 0.0f});
@@ -99,7 +100,73 @@ TEST_CASE("Ball") {
 
             b.CollideWithPaddle(p);
 
+            REQUIRE(b.GetVelocity().y == 1.0f);
+        }
+    }
+
+    SECTION("CollideWithBrick") {
+        Ball b;
+        b.SetRadius(1.0f);
+
+        SECTION("no hit") {
+            b.SetPosition({0.0f, 50.0f});
+            b.SetVelocity({0.0f, -1.0f});
+
+            Brick brick {{0.0f, 0.0f}, 10.0f, 10.0f};
+
+            auto didCollide = b.CollideWithBrick(brick);
+
+            REQUIRE(!didCollide);
+            REQUIRE(b.GetVelocity().x == 0.0f);
             REQUIRE(b.GetVelocity().y == -1.0f);
+        }
+        SECTION("hits from above") {
+            b.SetPosition({0.0f, 5.0f});
+            b.SetVelocity({0.0f, -1.0f});
+
+            Brick brick {{0.0f, 0.0f}, 10.0f, 10.0f};
+
+            auto didCollide = b.CollideWithBrick(brick);
+
+            REQUIRE(didCollide);
+            REQUIRE(b.GetVelocity().x == 0.0f);
+            REQUIRE(b.GetVelocity().y == 1.0f);
+        }
+        SECTION("hits from below") {
+            b.SetPosition({0.0f, 0.0f});
+            b.SetVelocity({0.0f, 1.0f});
+
+            Brick brick {{0.0f, 5.0f}, 10.0f, 10.0f};
+
+            auto didCollide = b.CollideWithBrick(brick);
+
+            REQUIRE(didCollide);
+            REQUIRE(b.GetVelocity().x == 0.0f);
+            REQUIRE(b.GetVelocity().y == -1.0f);
+        }
+        SECTION("hits from the left") {
+            b.SetPosition({0.0f, 0.0f});
+            b.SetVelocity({1.0f, 0.0f});
+
+            Brick brick {{5.0f, 0.0f}, 10.0f, 10.0f};
+
+            auto didCollide = b.CollideWithBrick(brick);
+
+            REQUIRE(didCollide);
+            REQUIRE(b.GetVelocity().x == -1.0f);
+            REQUIRE(b.GetVelocity().y == 0.0f);
+        }
+        SECTION("hits from the right") {
+            b.SetPosition({5.0f, 0.0f});
+            b.SetVelocity({-1.0f, 0.0f});
+
+            Brick brick {{0.0f, 0.0f}, 10.0f, 10.0f};
+
+            auto didCollide = b.CollideWithBrick(brick);
+
+            REQUIRE(didCollide);
+            REQUIRE(b.GetVelocity().x == 1.0f);
+            REQUIRE(b.GetVelocity().y == 0.0f);
         }
     }
 

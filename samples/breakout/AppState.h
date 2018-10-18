@@ -10,11 +10,13 @@
 
 class Renderer;
 class Font;
+class GLFWwindow;
 
 class App {
 public:
     virtual void ChangeState(int newState) = 0;
     virtual std::shared_ptr<Font> GetFont(int pt) = 0;
+    virtual GLFWwindow *GetWindow() = 0;
 };
 
 class AppState {
@@ -26,6 +28,7 @@ public:
     virtual void Render(Renderer& r) = 0;
     virtual void Exit(Renderer& r) = 0;
     virtual void HandleKey(int key, int scancode, int action, int mods) = 0;
+    virtual void HandleCursorPosition(double xpos, double ypos) = 0;
 
 protected:
     App* m_app;

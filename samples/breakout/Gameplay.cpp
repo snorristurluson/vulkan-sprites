@@ -34,6 +34,12 @@ void Gameplay::Init(Renderer &r) {
     m_ball.SetBounds(0.0f, 0.0f, m_fieldWidth, m_fieldHeight);
 
 
+    for(int y = 0; y < 5; ++y) {
+        for(int x = 0; x < 24; ++x) {
+            m_bricks.AddBrick({x*50 + 23, y*30 + 100}, 40, 20);
+        }
+    }
+
     m_leftPressed = false;
     m_rightPressed = false;
 }
@@ -44,6 +50,7 @@ void Gameplay::Enter(Renderer &r) {
     logger->debug(__PRETTY_FUNCTION__);
     m_frameCounter = 0;
 
+    glfwSetInputMode(m_app->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
 void Gameplay::Render(Renderer &r) {
@@ -69,7 +76,9 @@ void Gameplay::Render(Renderer &r) {
     m_ball.Update(td);
 
     m_ball.CollideWithPaddle(m_paddle);
+    m_bricks.CollideBallWithBricks(m_ball);
 
+    m_bricks.Render(r);
     m_paddle.Render(r);
     m_ball.Render(r);
 
@@ -79,6 +88,7 @@ void Gameplay::Exit(Renderer &r) {
     tmFunction(0, 0);
 
     logger->debug(__PRETTY_FUNCTION__);
+    glfwSetInputMode(m_app->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void Gameplay::HandleKey(int key, int scancode, int action, int mods) {
@@ -116,4 +126,8 @@ void Gameplay::HandleKey(int key, int scancode, int action, int mods) {
             break;
         default:break;
     }
+}
+
+void Gameplay::HandleCursorPosition(double xpos, double ypos) {
+    m_paddle.SetPosition({xpos, m_paddle.GetPosition().y});
 }
