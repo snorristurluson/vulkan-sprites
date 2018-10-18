@@ -103,6 +103,65 @@ TEST_CASE("Ball") {
         }
     }
 
+    SECTION("SetBounds") {
+        Ball b;
+        b.SetRadius(1.0f);
+        b.SetBounds(0.0f, 0.0f, 100.0f, 100.0f);
+
+        SECTION("inside bounds") {
+            b.SetPosition({50.0f, 50.0f});
+            b.SetVelocity({1.0f, 1.0f});
+            b.Update(1.0f);
+
+            glm::vec2 expected {51.0f, 51.0f};
+            REQUIRE(b.GetPosition() == expected);
+        }
+
+        SECTION("minx") {
+            b.SetPosition({0.5f, 50.0f});
+            b.SetVelocity({-1.0f, 0.0f});
+            b.Update(1.0f);
+
+            REQUIRE(b.GetPosition().x == 0.0f);
+            REQUIRE(b.GetPosition().y == 50.0f);
+            REQUIRE(b.GetVelocity().x == 1.0f);
+            REQUIRE(b.GetVelocity().y == 0.0f);
+        }
+
+        SECTION("maxx") {
+            b.SetPosition({99.5f, 50.0f});
+            b.SetVelocity({1.0f, 0.0f});
+            b.Update(1.0f);
+
+            REQUIRE(b.GetPosition().x == 100.0f);
+            REQUIRE(b.GetPosition().y == 50.0f);
+            REQUIRE(b.GetVelocity().x == -1.0f);
+            REQUIRE(b.GetVelocity().y == 0.0f);
+        }
+
+        SECTION("miny") {
+            b.SetPosition({50.0f, 0.5f});
+            b.SetVelocity({0.0f, -1.0f});
+            b.Update(1.0f);
+
+            REQUIRE(b.GetPosition().x == 50.0f);
+            REQUIRE(b.GetPosition().y == 0.0f);
+            REQUIRE(b.GetVelocity().x == 0.0f);
+            REQUIRE(b.GetVelocity().y == 1.0f);
+        }
+
+        SECTION("maxy") {
+            b.SetPosition({50.0f, 99.5f});
+            b.SetVelocity({0.0f, 1.0f});
+            b.Update(1.0f);
+
+            REQUIRE(b.GetPosition().x == 50.0f);
+            REQUIRE(b.GetPosition().y == 100.0f);
+            REQUIRE(b.GetVelocity().x == 0.0f);
+            REQUIRE(b.GetVelocity().y == -1.0f);
+        }
+    }
+
 }
 
 

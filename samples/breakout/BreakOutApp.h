@@ -24,7 +24,7 @@ public:
 
     void ChangeState(int newState) override;
 
-    std::shared_ptr<Font> GetFont(const std::string &name, int pt) override;
+    std::shared_ptr<Font> GetFont(int pt) override;
 
     void HandleKey(GLFWwindow *window, int key, int scancode, int action, int mods);
 

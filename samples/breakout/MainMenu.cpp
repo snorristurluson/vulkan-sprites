@@ -13,8 +13,8 @@ static auto logger = GetLogger("mainmenu");
 MainMenu::MainMenu(App *a) : AppState(a) {}
 
 void MainMenu::Init(Renderer &r) {
-    m_titleFont = m_app->GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 96);
-    m_itemFont = m_app->GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 48);
+    m_titleFont = m_app->GetFont(48);
+    m_itemFont = m_app->GetFont(32);
 }
 
 void MainMenu::Enter(Renderer &r) {

@@ -10,7 +10,7 @@ int main()
     BreakOutApp app;
     Renderer renderer;
 
-    app.CreateWindow(800, 600);
+    app.CreateWindow(1200, 900);
     app.Run();
 
     return 0;

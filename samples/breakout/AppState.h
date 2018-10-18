@@ -14,7 +14,7 @@ class Font;
 class App {
 public:
     virtual void ChangeState(int newState) = 0;
-    virtual std::shared_ptr<Font> GetFont(const std::string& name, int pt) = 0;
+    virtual std::shared_ptr<Font> GetFont(int pt) = 0;
 };
 
 class AppState {

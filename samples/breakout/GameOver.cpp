@@ -15,7 +15,7 @@ GameOver::GameOver(App *a) : AppState(a) {
 }
 
 void GameOver::Init(Renderer &r) {
-    m_titleFont = m_app->GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 96);
+    m_titleFont = m_app->GetFont(48);
 }
 
 void GameOver::Enter(Renderer &r) {

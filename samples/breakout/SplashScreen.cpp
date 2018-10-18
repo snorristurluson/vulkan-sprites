@@ -12,7 +12,7 @@ static auto logger = GetLogger("splashscreen");
 SplashScreen::SplashScreen(App *a) : AppState(a) {}
 
 void SplashScreen::Init(Renderer &r) {
-    m_font = m_app->GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 144);
+    m_font = m_app->GetFont(96);
 }
 
 void SplashScreen::Enter(Renderer &r) {

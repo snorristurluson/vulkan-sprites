@@ -16,21 +16,22 @@ Gameplay::Gameplay(App *a) : AppState(a) {
 }
 
 void Gameplay::Init(Renderer &r) {
-    m_titleFont = m_app->GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 96);
+    m_titleFont = m_app->GetFont(48);
 
     m_paddleSpeed = 500.0f;
     m_fieldWidth = 1200.0f;
     m_fieldHeight = 800.0f;
 
-    m_paddle.SetPosition({m_fieldWidth/2.0f, m_fieldHeight});
+    m_paddle.SetPosition({m_fieldWidth/2.0f, m_fieldHeight - 40});
     m_paddle.SetVelocity({0, 0});
     m_paddle.SetWidth(100);
     m_paddle.SetHeight(10);
     m_paddle.SetBounds(0.0f, m_fieldWidth);
     
     m_ball.SetPosition({m_fieldWidth/2.0f, m_fieldHeight/2.0f});
-    m_ball.SetVelocity({0, 750});
+    m_ball.SetVelocity({500, 500});
     m_ball.SetRadius(10);
+    m_ball.SetBounds(0.0f, 0.0f, m_fieldWidth, m_fieldHeight);
 
 
     m_leftPressed = false;

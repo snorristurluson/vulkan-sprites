@@ -87,6 +87,6 @@ void BreakOutApp::HandleKey(GLFWwindow *window, int key, int scancode, int actio
     m_currentState->HandleKey(key, scancode, action, mods);
 }
 
-std::shared_ptr<Font> BreakOutApp::GetFont(const std::string &name, int pt) {
-    return m_fontManager->GetFont(name, pt);
+std::shared_ptr<Font> BreakOutApp::GetFont(int pt) {
+    return m_fontManager->GetFont("resources/montserrat/Montserrat-Bold.ttf", pt);
 }
