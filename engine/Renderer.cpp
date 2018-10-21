@@ -4,6 +4,7 @@
 #include "TextureAtlas.h"
 #include "Vertex.h"
 #include "Logger.h"
+#include "telemetry.h"
 
 #include <memory>
 #include <utility>
@@ -1262,6 +1263,8 @@ void Renderer::WaitUntilDeviceIdle() {
 }
 
 bool Renderer::StartFrame() {
+    tmFunction(0, 0);
+
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
@@ -1307,6 +1310,8 @@ bool Renderer::StartFrame() {
 }
 
 void Renderer::EndFrame() {
+    tmFunction(0, 0);
+
     queueDrawCommand();
 
     copyStagingBuffersToDevice(m_currentCommandBuffer);
