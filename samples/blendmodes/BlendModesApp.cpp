@@ -29,7 +29,7 @@ void BlendModesApp::Run()
 
     r.SetClearColor({0.0f, 0.0f, 0.0f, 1.0f});
 
-    auto tex = r.CreateTexture("resources/2.png");
+    auto tex = r.CreateTexture("resources/circle.png");
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
@@ -39,13 +39,13 @@ void BlendModesApp::Run()
             DrawOverlappingSprites(r, {0.0f, 0.0f});
 
             r.SetBlendMode(BM_BLEND);
-            DrawOverlappingSprites(r, {256.0f, 0.0f});
+            DrawOverlappingSprites(r, {300.0f, 0.0f});
 
             r.SetBlendMode(BM_ADD);
-            DrawOverlappingSprites(r, {0.0f, 256.0f});
+            DrawOverlappingSprites(r, {0.0f, 300.0f});
 
             r.SetBlendMode(BM_ADDX2);
-            DrawOverlappingSprites(r, {256.0f, 256.0f});
+            DrawOverlappingSprites(r, {300.0f, 300.0f});
 
             r.EndFrame();
 
@@ -58,13 +58,13 @@ void BlendModesApp::Run()
 }
 
 void BlendModesApp::DrawOverlappingSprites(Renderer &r, glm::vec2 offset) const {
-    r.SetColor({0.5f, 0.7f, 0.3f, 0.7f});
+    r.SetColor({1.0f, 0.0f, 0.0f, 0.5f});
     r.DrawSprite(32 + offset.x, 32 + offset.y, 256, 256);
-    r.SetColor({0.7f, 0.5f, 0.3f, 0.7f});
+    r.SetColor({0.0f, 1.0f, 0.0f, 0.5f});
     r.DrawSprite(64 + offset.x, 32 + offset.y, 256, 256);
-    r.SetColor({0.5f, 0.3f, 0.7f, 0.7f});
+    r.SetColor({0.0f, 0.0f, 1.0f, 0.5f});
     r.DrawSprite(64 + offset.x, 64 + offset.y, 256, 256);
-    r.SetColor({0.7f, 0.3f, 0.5f, 0.7f});
+    r.SetColor({0.5f, 0.5f, 0.5f, 0.5f});
     r.DrawSprite(32 + offset.x, 64 + offset.y, 256, 256);
 }
 
