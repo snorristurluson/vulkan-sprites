@@ -183,6 +183,17 @@ TEST_CASE("Renderer") {
             REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
         }
     }
+    SECTION("Blend mode") {
+        SECTION("initial blend mode is none") {
+            REQUIRE(r.GetBlendMode() == BM_NONE);
+        }
+
+        SECTION("SetBlendMode") {
+            r.SetBlendMode(BM_ADD);
+            REQUIRE(r.GetBlendMode() == BM_ADD);
+        }
+    }
+
 
     r.WaitUntilDeviceIdle();
     REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);

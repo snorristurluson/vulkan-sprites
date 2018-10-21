@@ -28,6 +28,15 @@ struct BoundBuffer {
     VkDeviceMemory bufferMemory;
 };
 
+enum BlendMode {
+    BM_NONE,
+    BM_BLEND,
+    BM_ADD,
+    BM_ADDX2,
+
+    NUM_BLENDMODES
+};
+
 class Renderer
 {
 public:
@@ -93,6 +102,9 @@ public:
     void SetTexture(std::shared_ptr<ITexture> texture);
 
     unsigned long GetNumDrawCommands();
+
+    void SetBlendMode(BlendMode bm);
+    BlendMode GetBlendMode() const;
 
 protected:
     GLFWwindow *m_window;
@@ -166,6 +178,7 @@ protected:
     TextureWindow m_currentTextureWindow;
 
     glm::vec4 m_currentColor;
+    BlendMode m_currentBlendMode;
 
     struct DrawCommand {
         DrawCommand(VkDescriptorSet ds, uint16_t bi, uint16_t ni) :

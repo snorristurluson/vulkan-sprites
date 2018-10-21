@@ -175,7 +175,8 @@ Renderer::Renderer() :
     m_vertexWriteStart(nullptr),
     m_currentVertexWrite(nullptr),
     m_vertexWriteEnd(nullptr),
-    m_currentCommandBuffer(nullptr)
+    m_currentCommandBuffer(nullptr),
+    m_currentBlendMode(BM_NONE)
 {
     logger->debug("Constructed renderer");
 }
@@ -1672,6 +1673,16 @@ DebugMessenger *Renderer::GetDebugMessenger() {
 
 void Renderer::DestroyBufferLater(BoundBuffer buffer) {
     m_buffersToDestroyLater[m_currentFrame].emplace_back(buffer);
+}
+
+void Renderer::SetBlendMode(BlendMode bm)
+{
+    m_currentBlendMode = bm;
+}
+
+BlendMode Renderer::GetBlendMode() const
+{
+    return m_currentBlendMode;
 }
 
 #pragma clang diagnostic pop
