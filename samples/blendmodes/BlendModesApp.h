@@ -7,6 +7,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <Renderer.h>
 
 class BlendModesApp
 {
@@ -20,6 +21,8 @@ public:
 
 protected:
     GLFWwindow *m_window;
+
+    void DrawOverlappingSprites(Renderer &r, glm::vec2 offset) const;
 };
 
 

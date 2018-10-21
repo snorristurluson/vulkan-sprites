@@ -8,6 +8,7 @@
 
 #include <string>
 #include <cstdio>
+#include <glm/vec2.hpp>
 
 BlendModesApp::BlendModesApp() : m_window(nullptr)
 {
@@ -25,6 +26,7 @@ void BlendModesApp::Run()
 {
     Renderer r;
     r.Initialize(m_window, Renderer::ENABLE_VALIDATION);
+
     r.SetClearColor({0.0f, 0.0f, 0.0f, 1.0f});
 
     auto tex = r.CreateTexture("resources/2.png");
@@ -32,18 +34,38 @@ void BlendModesApp::Run()
         glfwPollEvents();
         if(r.StartFrame()) {
             r.SetTexture(tex);
-            r.SetColor({0.5f, 0.7f, 0.3f, 0.7f});
-            r.DrawSprite(32, 32, 256, 256);
-            r.SetColor({0.7f, 0.5f, 0.3f, 0.7f});
-            r.DrawSprite(64, 32, 256, 256);
-            r.SetColor({0.5f, 0.3f, 0.7f, 0.7f});
-            r.DrawSprite(64, 64, 256, 256);
-            r.SetColor({0.7f, 0.3f, 0.5f, 0.7f});
-            r.DrawSprite(32, 64, 256, 256);
+
+            r.SetBlendMode(BM_NONE);
+            DrawOverlappingSprites(r, {0.0f, 0.0f});
+
+            r.SetBlendMode(BM_BLEND);
+            DrawOverlappingSprites(r, {256.0f, 0.0f});
+
+            r.SetBlendMode(BM_ADD);
+            DrawOverlappingSprites(r, {0.0f, 256.0f});
+
+            r.SetBlendMode(BM_ADDX2);
+            DrawOverlappingSprites(r, {256.0f, 256.0f});
+
             r.EndFrame();
+
+            if(r.GetNumDrawCommands() > 1) {
+                throw std::runtime_error("Too many draw commands");
+            }
         }
     }
     r.WaitUntilDeviceIdle();
+}
+
+void BlendModesApp::DrawOverlappingSprites(Renderer &r, glm::vec2 offset) const {
+    r.SetColor({0.5f, 0.7f, 0.3f, 0.7f});
+    r.DrawSprite(32 + offset.x, 32 + offset.y, 256, 256);
+    r.SetColor({0.7f, 0.5f, 0.3f, 0.7f});
+    r.DrawSprite(64 + offset.x, 32 + offset.y, 256, 256);
+    r.SetColor({0.5f, 0.3f, 0.7f, 0.7f});
+    r.DrawSprite(64 + offset.x, 64 + offset.y, 256, 256);
+    r.SetColor({0.7f, 0.3f, 0.5f, 0.7f});
+    r.DrawSprite(32 + offset.x, 64 + offset.y, 256, 256);
 }
 
 GLFWwindow *BlendModesApp::GetWindow()
