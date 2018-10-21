@@ -1547,21 +1547,25 @@ void Renderer::DrawSprite(float x, float y, float width, float height) {
     m_currentVertexWrite->pos = {x, y};
     m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y0};
+    m_currentVertexWrite->data[0] = m_currentBlendMode;
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y};
     m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y0};
+    m_currentVertexWrite->data[0] = m_currentBlendMode;
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x + width, y + height};
     m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y1};
+    m_currentVertexWrite->data[0] = m_currentBlendMode;
     ++m_currentVertexWrite;
 
     m_currentVertexWrite->pos = {x, y + height};
     m_currentVertexWrite->color = m_currentColor;
     m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y1};
+    m_currentVertexWrite->data[0] = m_currentBlendMode;
     ++m_currentVertexWrite;
 
     *m_currentIndexWrite++ = base;

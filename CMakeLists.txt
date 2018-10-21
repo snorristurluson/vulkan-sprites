@@ -70,6 +70,14 @@ add_executable(
 target_link_libraries(textureatlas engine)
 target_link_libraries(textureatlas Threads::Threads stdc++fs)
 
+add_executable(
+        blendmodes
+        samples/blendmodes/main.cpp
+        samples/blendmodes/BlendModesApp.cpp
+        samples/blendmodes/BlendModesApp.h
+)
+target_link_libraries(blendmodes engine Threads::Threads ${FREETYPE_LIBRARIES})
+
 add_library(breakoutlib
         samples/breakout/BreakOutApp.cpp
         samples/breakout/BreakOutApp.h
