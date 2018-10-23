@@ -13,7 +13,7 @@ TextApp::TextApp() {
 }
 
 void TextApp::CreateWindow(int width, int height) {
-    m_window = glfwCreateWindow(width, height, "TextureAtlas", nullptr, nullptr);
+    m_window = glfwCreateWindow(width, height, "Text", nullptr, nullptr);
 
     glfwGetFramebufferSize(m_window, &m_width, &m_height);
 
@@ -29,13 +29,20 @@ void TextApp::Run() {
 
     auto ta = r.CreateTextureAtlas(512, 512);
     FontManager fm(ta);
-    auto font = fm.GetFont("/usr/share/fonts/truetype/freefont/FreeMonoBoldOblique.ttf", 144);
-    r.SetClearColor({0.0f, 0.0f, 1.0f, 1.0f});
+    auto font = fm.GetFont("resources/montserrat/Montserrat-Bold.ttf", 36);
+    r.SetClearColor({1.0f, 1.0f, 1.0f, 1.0f});
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         if(r.StartFrame()) {
-            r.SetColor({0.0f, 1.0f, 0.0f, 1.0f});
-            font->Draw(r, 0, 128, "This is a test");
+            r.SetColor({0.0f, 0.0f, 0.0f, 1.0f});
+            font->Draw(r, 80, 100, "This is a test");
+
+            r.SetColor({1.0f, 0.0f, 0.0f, 1.0f});
+            font->Draw(r, 30, 140, "This is a red test");
+
+            r.SetColor({0.0f, 0.0f, 1.0f, 1.0f});
+            font->Draw(r, 30, 180, "The quick brown fox");
+            font->Draw(r, 60, 220, "jumps over the lazy dog");
 
             r.SetTexture(ta);
             r.DrawSprite(2048, 0, 2048, 2048);

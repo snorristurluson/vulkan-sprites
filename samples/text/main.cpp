@@ -12,7 +12,7 @@ static auto logger = GetLogger("main");
 
 int main(int argc, char* argv[])
 {
-    logger->debug("Starting TextureAtlasApp");
+    logger->debug("Starting TextApp");
 
     TextApp app;
 
