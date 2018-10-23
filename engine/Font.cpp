@@ -42,7 +42,7 @@ TextDimensions Font::Measure(const std::string& text) {
 }
 
 void Font::Draw(Renderer &r, float x, float y, const std::string &text) {
-    int pos = 0;
+    int pos = x;
 
     for(auto c: text) {
         auto glyph = GetGlyph(c);
