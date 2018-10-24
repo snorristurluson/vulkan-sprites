@@ -25,7 +25,6 @@ Glyph::Glyph(FT_Face face, FT_UInt ix, std::shared_ptr<TextureAtlas> ta) : m_fac
     m_advance = static_cast<int>(glyphSlot->advance.x / 64);
 
     CreateTextureFromBitmap(ta);
-
 }
 
 void Glyph::CreateTextureFromBitmap(std::shared_ptr<TextureAtlas> &ta) {
