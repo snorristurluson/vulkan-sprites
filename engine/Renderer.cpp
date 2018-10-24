@@ -126,16 +126,16 @@ namespace {
     }
 
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes) {
-        VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
+        VkPresentModeKHR bestMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
         for (const auto &availablePresentMode : availablePresentModes) {
             logger->debug("availablePresentMode {}", availablePresentMode);
-            if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
-                logger->debug("Found VK_PRESENT_MODE_FIFO_KHR");
+            if (availablePresentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR) {
+                logger->debug("Found VK_PRESENT_MODE_FIFO_RELAXED_KHR");
                 return availablePresentMode;
-            } else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            } else if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
                 bestMode = availablePresentMode;
-                logger->debug("Found VK_PRESENT_MODE_IMMEDIATE_KHR");
+                logger->debug("Found VK_PRESENT_MODE_FIFO_KHR");
             }
         }
 
@@ -1266,7 +1266,33 @@ void Renderer::WaitUntilDeviceIdle() {
 bool Renderer::StartFrame() {
     tmFunction(0, 0);
 
-    vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+    {
+        tmZone(0, 0, "wait for inflight fences");
+        vkWaitForFences(
+                m_device,
+                1,
+                &m_inFlightFences[m_currentFrame],
+                VK_TRUE,
+                std::numeric_limits<uint64_t>::max());
+    }
+
+    {
+        tmZone(0, 0, "vkAcquireNextImageKHR");
+        VkResult result = vkAcquireNextImageKHR(
+                m_device,
+                m_swapChain,
+                std::numeric_limits<uint64_t>::max(),
+                m_imageAvailableSemaphores[m_currentFrame],
+                VK_NULL_HANDLE,
+                &m_nextFrame);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return false;
+        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swap chain image");
+        }
+    }
 
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     if (!perFrameCmds.empty()) {
@@ -1276,21 +1302,6 @@ bool Renderer::StartFrame() {
                 static_cast<uint32_t>(perFrameCmds.size()),
                 &perFrameCmds[0]);
         perFrameCmds.clear();
-    }
-
-    VkResult result = vkAcquireNextImageKHR(
-            m_device,
-            m_swapChain,
-            std::numeric_limits<uint64_t>::max(),
-            m_imageAvailableSemaphores[m_currentFrame],
-            VK_NULL_HANDLE,
-            &m_nextFrame);
-
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain();
-        return false;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        throw std::runtime_error("failed to acquire swap chain image");
     }
 
     for(auto buffer: m_buffersToDestroyLater[m_currentFrame]) {
@@ -1362,8 +1373,10 @@ void Renderer::EndFrame() {
     }
 
     VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
 
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.waitSemaphoreCount = 1;
@@ -1371,20 +1384,22 @@ void Renderer::EndFrame() {
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_currentCommandBuffer;
-
-    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
     vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
-    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to submit command buffer");
+    {
+        tmZone(0, 0, "vkQueueSubmit");
+        if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to submit command buffer");
+        }
     }
 
     m_currentCommandBuffer = nullptr;
 
     VkSwapchainKHR swapChains[] = {m_swapChain};
+    uint32_t imageIndices[] = {m_nextFrame};
 
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1392,17 +1407,21 @@ void Renderer::EndFrame() {
     presentInfo.pWaitSemaphores = signalSemaphores;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &m_nextFrame;
+    presentInfo.pImageIndices = imageIndices;
 
-    auto result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+    {
+        tmZone(0, 0, "vkQueuePresentKHR");
+        auto result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        recreateSwapChain();
-    } else if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swap chain image");
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+            recreateSwapChain();
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swap chain image");
+        }
     }
 
-    m_currentFrame = m_nextFrame;
+    m_currentFrame++;
+    m_currentFrame %= getMaxFramesInFlight();
 }
 
 void Renderer::updateUniformBuffer() const
@@ -1420,6 +1439,8 @@ void Renderer::updateUniformBuffer() const
 }
 
 void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
+    tmFunction(0, 0);
+
     VkDeviceSize indexSize = (m_currentIndexWrite - m_indexWriteStart) * sizeof(uint16_t);
     VkDeviceSize vertexSize = (m_currentVertexWrite - m_vertexWriteStart) * sizeof(Vertex);
 
@@ -1442,6 +1463,8 @@ void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
 }
 
 void Renderer::unmapStagingBuffers() {
+    tmFunction(0, 0);
+
     vkUnmapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory);
     m_indexWriteStart = nullptr;
     m_currentIndexWrite = nullptr;
