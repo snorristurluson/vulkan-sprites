@@ -62,6 +62,7 @@ void BreakOutApp::Run()
     m_currentState->Enter(r);
 
     while (!glfwWindowShouldClose(m_window) && m_currentState) {
+        tmZone(0, 0, "main loop");
         glfwPollEvents();
         if(r.StartFrame()) {
             while(m_nextState != m_currentState) {
