@@ -19,7 +19,10 @@ add_library(
         FontManager.cpp FontManager.h
         Glyph.cpp Glyph.h
         Font.cpp Font.h
-        telemetry.cpp telemetry.h)
+        telemetry.cpp telemetry.h
+        ParticleSystem.cpp ParticleSystem.h
+        ParticleEmitter.cpp ParticleEmitter.h
+        Particle.cpp Particle.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES

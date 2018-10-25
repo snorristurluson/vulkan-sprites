@@ -113,6 +113,12 @@ add_executable(
 target_link_libraries(breakout_test breakoutlib engine ${FREETYPE_LIBRARIES})
 
 add_executable(
+        particles
+        samples/particles/main.cpp
+        samples/particles/ParticlesApp.cpp samples/particles/ParticlesApp.h)
+target_link_libraries(particles engine ${FREETYPE_LIBRARIES})
+
+add_executable(
         engine_test
         engine/test_main.cpp
         engine/Area_test.cpp
@@ -121,5 +127,6 @@ add_executable(
         engine/Renderer_test.cpp
         engine/TextureAtlas_test.cpp
         engine/FontManager_test.cpp
+        engine/ParticleSystem_test.cpp
 )
 target_link_libraries(engine_test engine ${FREETYPE_LIBRARIES})
