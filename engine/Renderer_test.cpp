@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include "Renderer.h"
 #include "Texture.h"
+#include "Vertex.h"
 
 TEST_CASE("Renderer basics") {
     SECTION("can create") {
@@ -154,6 +155,29 @@ TEST_CASE("Renderer") {
             r.EndFrame();
 
             REQUIRE(r.GetNumDrawCommands() == 3);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+    }
+
+    SECTION("DrawTriangles") {
+        SECTION("simple case") {
+            std::array<uint16_t, 6> indices {0, 1, 3,  3, 1, 2};
+            std::array<Vertex, 4> vertices {
+                {
+                    {{  0,   0}, {1, 1, 1, 1}, {0, 0}},
+                    {{  0, 100}, {1, 1, 1, 1}, {0, 1}},
+                    {{100, 100}, {1, 1, 1, 1}, {1, 1}},
+                    {{100,   0}, {1, 1, 1, 1}, {1, 0}},
+                }
+            };
+
+            r.StartFrame();
+            r.DrawTriangles(indices.data(), indices.size(), vertices.data(), vertices.size());
+            r.EndFrame();
+
+            REQUIRE(r.GetNumDrawCommands() == 1);
 
             r.WaitUntilDeviceIdle();
             REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);

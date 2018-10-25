@@ -18,7 +18,12 @@ struct Vertex
     glm::vec2 pos;
     glm::vec4 color;
     glm::vec2 texCoord;
-    int32_t data[4];
+    union {
+        struct {
+            int32_t blendMode;
+        };
+        int32_t data[4];
+    };
 
     static VkVertexInputBindingDescription getBindingDescription()
     {

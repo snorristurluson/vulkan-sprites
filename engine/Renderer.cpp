@@ -1552,54 +1552,56 @@ void Renderer::SetClearColor(const glm::vec4 &clearColor) {
 }
 
 void Renderer::DrawSprite(float x, float y, float width, float height) {
+    std::array<uint16_t, 6> indices {0, 1, 3,  3, 1, 2};
+    std::array<Vertex, 4> vertices {{
+        {{x, y}, m_currentColor, {m_currentTextureWindow.x0, m_currentTextureWindow.y0}},
+        {{x, y + height}, m_currentColor, {m_currentTextureWindow.x0, m_currentTextureWindow.y1}},
+        {{x + width, y + height}, m_currentColor, {m_currentTextureWindow.x1, m_currentTextureWindow.y1}},
+        {{x + width, y}, m_currentColor, {m_currentTextureWindow.x1, m_currentTextureWindow.y0}},
+    }};
+
+    DrawTriangles(indices.data(), indices.size(), vertices.data(), vertices.size());
+}
+
+void Renderer::DrawTriangles(const uint16_t *indices, size_t numIndices, const Vertex *vertices, size_t numVertices) {
     if(!m_currentIndexWrite) {
         throw std::runtime_error("index write destination is null");
     }
     if(!m_currentVertexWrite) {
         throw std::runtime_error("vertex write destination is null");
     }
-    if(m_currentVertexWrite + 4 >= m_vertexWriteEnd) {
+    if(m_currentVertexWrite + numVertices >= m_vertexWriteEnd) {
         throw std::runtime_error("vertex buffer full");
     }
-    if(m_currentIndexWrite + 6 >= m_indexWriteEnd) {
+    if(m_currentIndexWrite + numIndices >= m_indexWriteEnd) {
         throw std::runtime_error("index buffer full");
     }
 
     auto base = static_cast<uint16_t>(m_currentVertexWrite - m_vertexWriteStart);
 
-    m_currentVertexWrite->pos = {x, y};
-    m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y0};
-    m_currentVertexWrite->data[0] = m_currentBlendMode;
-    ++m_currentVertexWrite;
+    // Both indices and vertices need adjustment while being copied to
+    // the index/vertex buffers. The indices need the base added,
+    // and the vertices need to be colored, for example.
+    auto vertexRead = vertices;
+    for(int i = 0; i < numVertices; ++i) {
+        m_currentVertexWrite->pos = vertexRead->pos;
+        m_currentVertexWrite->color = vertexRead->color * m_currentColor;
+        m_currentVertexWrite->texCoord = vertexRead->texCoord;
+        m_currentVertexWrite->blendMode = m_currentBlendMode;
 
-    m_currentVertexWrite->pos = {x + width, y};
-    m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y0};
-    m_currentVertexWrite->data[0] = m_currentBlendMode;
-    ++m_currentVertexWrite;
+        m_currentVertexWrite++;
+        vertexRead++;
+    }
 
-    m_currentVertexWrite->pos = {x + width, y + height};
-    m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x1, m_currentTextureWindow.y1};
-    m_currentVertexWrite->data[0] = m_currentBlendMode;
-    ++m_currentVertexWrite;
+    auto indexRead = indices;
+    for(int i = 0; i < numIndices; ++i) {
+        *m_currentIndexWrite = *indexRead + base;
+        m_currentIndexWrite++;
+        indexRead++;
+    }
 
-    m_currentVertexWrite->pos = {x, y + height};
-    m_currentVertexWrite->color = m_currentColor;
-    m_currentVertexWrite->texCoord = {m_currentTextureWindow.x0, m_currentTextureWindow.y1};
-    m_currentVertexWrite->data[0] = m_currentBlendMode;
-    ++m_currentVertexWrite;
-
-    *m_currentIndexWrite++ = base;
-    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 1);
-    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 3);
-    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 3);
-    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 1);
-    *m_currentIndexWrite++ = static_cast<uint16_t>(base + 2);
-
-    m_numIndices += 6;
-    m_numVertices += 4;
+    m_numIndices += numIndices;
+    m_numVertices += numVertices;
 }
 
 void Renderer::createIndexAndVertexBuffers() {

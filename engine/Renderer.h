@@ -90,6 +90,7 @@ public:
     void EndFrame();
 
     void DrawSprite(float x, float y, float width, float height);
+    void DrawTriangles(const uint16_t* indices, size_t numIndices, const Vertex* vertices, size_t numVertices);
 
     VkDeviceSize GetNumIndices();
     VkDeviceSize GetNumVertices();
