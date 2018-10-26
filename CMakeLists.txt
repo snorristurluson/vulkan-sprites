@@ -119,6 +119,11 @@ add_executable(
 target_link_libraries(particles engine ${FREETYPE_LIBRARIES})
 
 add_executable(
+        curves
+        samples/curves/main.cpp samples/curves/CurvesApp.cpp samples/curves/CurvesApp.h)
+target_link_libraries(curves engine ${FREETYPE_LIBRARIES})
+
+add_executable(
         engine_test
         engine/test_main.cpp
         engine/Area_test.cpp
