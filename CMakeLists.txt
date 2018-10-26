@@ -128,5 +128,5 @@ add_executable(
         engine/TextureAtlas_test.cpp
         engine/FontManager_test.cpp
         engine/ParticleSystem_test.cpp
-)
+        engine/Curve_test.cpp)
 target_link_libraries(engine_test engine ${FREETYPE_LIBRARIES})
