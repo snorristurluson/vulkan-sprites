@@ -13,6 +13,10 @@ Ball::Ball() :
     m_maxX(1.0f),
     m_maxY(1.0f)
 {
+    m_emitter = m_particleSystem.AddEmitter();
+    m_emitter->SetLifespan(0.7f);
+    m_emitter->SetSpeed(40.0f);
+    m_emitter->SetEmissionRate(75.0f);
 }
 
 void Ball::SetRadius(float r) {
@@ -46,6 +50,8 @@ void Ball::Render(Renderer &r) {
     r.SetTexture(nullptr);
     r.SetColor({0.5f, 1.0f, 0.5f, 1.0f});
     r.DrawSprite(m_position.x - m_radius, m_position.y - m_radius, m_radius, m_radius);
+
+    m_particleSystem.Render(r);
 }
 
 void Ball::SetBounds(float minX, float minY, float maxX, float maxY) {
@@ -77,6 +83,11 @@ void Ball::Update(float td) {
         m_position.y = m_maxY;
         m_velocity.y *= -1.0f;
     }
+
+    float direction = atan2(m_velocity.y, m_velocity.x);
+    m_emitter->SetDirection(direction);
+    m_emitter->SetPosition(m_position);
+    m_particleSystem.Update(td);
 }
 
 bool Ball::CollideWithBrick(const Brick &brick) {

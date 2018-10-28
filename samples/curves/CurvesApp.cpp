@@ -75,8 +75,10 @@ void CurvesApp::Run() {
             font->Draw(r, 20, 80, buffer);
 
             r.SetTexture(nullptr);
-            r.SetColor(c3.GetValue(time));
-            r.DrawSprite(20, 300, 200, 200);
+            for(int i = 0; i < 32; ++i) {
+                r.SetColor(c3.GetValue(time + i*0.01f));
+                r.DrawSprite(20 + i*20, 300, 20, 200);
+            }
 
             auto pos = c2.GetValue(time);
             r.SetTexture(nullptr);

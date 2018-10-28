@@ -1655,7 +1655,7 @@ VkDeviceSize Renderer::getMaxNumIndices() {
 }
 
 VkDeviceSize Renderer::getMaxNumVertices() {
-    return 64*1024;
+    return 1024*1024;
 }
 
 VkDeviceSize Renderer::GetNumIndices() {

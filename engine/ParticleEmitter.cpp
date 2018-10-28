@@ -60,9 +60,9 @@ void ParticleEmitter::Update(float td) {
             }
             p->timeRemaining = m_lifespan;
             p->position = m_position;
-            float x = m_rng(m_random_engine);
-            float y = m_rng(m_random_engine);
-            p->velocity = glm::vec2 {10.0f * x, 10.0f * y};
+            float x = cosf(m_direction + m_directionRange * m_rng(m_random_engine));
+            float y = sinf(m_direction + m_directionRange * m_rng(m_random_engine));
+            p->velocity = glm::vec2 {m_speed * x, m_speed * y};
             p->color = glm::vec4 {1.0f, 1.0f, 1.0f, 1.0f};
 
             m_timeToEmit += 1.0f/m_emissionRate;
@@ -79,5 +79,29 @@ void ParticleEmitter::Render(Renderer &r) {
             r.DrawSprite(p.position.x - 8.0f, p.position.y - 8.0f, 16, 16);
         }
     }
+}
+
+float ParticleEmitter::GetDirection() const {
+    return m_direction;
+}
+
+void ParticleEmitter::SetDirection(float a) {
+    m_direction = a;
+}
+
+float ParticleEmitter::GetDirectionRange() const {
+    return m_directionRange;
+}
+
+void ParticleEmitter::SetDirectionRange(float r) {
+    m_directionRange = r;
+}
+
+float ParticleEmitter::GetSpeed() const {
+    return m_speed;
+}
+
+void ParticleEmitter::SetSpeed(float s) {
+    m_speed = s;
 }
 

@@ -6,6 +6,7 @@
 #define VULKAN_SPRITES_BALL_H
 
 
+#include <ParticleSystem.h>
 #include "Movable.h"
 #include "Paddle.h"
 
@@ -33,6 +34,8 @@ protected:
     float m_minY;
     float m_maxX;
     float m_maxY;
+    ParticleSystem m_particleSystem;
+    std::shared_ptr<ParticleEmitter> m_emitter;
 };
 
 

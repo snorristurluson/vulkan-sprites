@@ -2,8 +2,8 @@
 // Created by snorri on 25.10.2018.
 //
 
-#include <Renderer.h>
-#include <FontManager.h>
+#include "Renderer.h"
+#include "FontManager.h"
 #include "TextureAtlas.h"
 #include "ParticleSystem.h"
 #include "ParticlesApp.h"
@@ -38,11 +38,14 @@ void ParticlesApp::Run() {
     std::default_random_engine random_engine;
     std::uniform_real_distribution<float> rng;
 
-    for(int i = 0; i < 50; ++i) {
+    for(int i = 0; i < 500; ++i) {
         auto em = ps.AddEmitter();
         em->SetEmissionRate(rng(random_engine) * 50.0f + 10.0f);
         em->SetPosition({rng(random_engine) * 800, rng(random_engine) * 600});
         em->SetLifespan(rng(random_engine) * 5.0f + 1.0f);
+        em->SetDirection(rng(random_engine) * M_PI * 2.0f);
+        em->SetDirectionRange(0.1f);
+        em->SetSpeed(rng(random_engine) * 10.0f + 10.0f);
     }
 
     r.SetClearColor({0.0f, 0.0f, 0.0f, 1.0f});

@@ -41,6 +41,9 @@ TEST_CASE("ParticleSystem basics") {
             REQUIRE(em->GetEmissionRate() == 0.0f);
             REQUIRE(em->GetNumParticles() == 0);
             REQUIRE(em->GetLifespan() == 1.0f);
+            REQUIRE(em->GetDirection() == 0.0f);
+            REQUIRE(em->GetDirectionRange() == 0.0f);
+            REQUIRE(em->GetSpeed() == 0.0f);
         }
 
         SECTION("SetEmissionRate") {
@@ -64,6 +67,20 @@ TEST_CASE("ParticleSystem basics") {
             REQUIRE(em->GetNumParticles() == 10);
         }
 
+        SECTION("SetDirection") {
+            em->SetDirection(0.12f);
+            REQUIRE(em->GetDirection() == 0.12f);
+        }
+
+        SECTION("SetDirectionRange") {
+            em->SetDirectionRange(0.12f);
+            REQUIRE(em->GetDirectionRange() == 0.12f);
+        }
+
+        SECTION("SetSpeed") {
+            em->SetSpeed(0.34f);
+            REQUIRE(em->GetSpeed() == 0.34f);
+        }
     }
 }
 
