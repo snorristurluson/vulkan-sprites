@@ -1116,23 +1116,21 @@ VkDescriptorSet Renderer::CreateTextureDescriptorSet(VkImageView imageView, VkSa
         throw std::runtime_error("failed to allocate texture descriptor set");
     }
 
-    for (size_t i = 0; i < getMaxFramesInFlight(); ++i) {
-        VkDescriptorImageInfo imageInfo = {};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = imageView;
-        imageInfo.sampler = sampler;
+    VkDescriptorImageInfo imageInfo = {};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = imageView;
+    imageInfo.sampler = sampler;
 
-        VkWriteDescriptorSet descriptorWrites = {};
-        descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites.dstSet = descriptorSet;
-        descriptorWrites.dstBinding = 0;
-        descriptorWrites.dstArrayElement = 0;
-        descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites.descriptorCount = 1;
-        descriptorWrites.pImageInfo = &imageInfo;
+    VkWriteDescriptorSet descriptorWrites = {};
+    descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites.dstSet = descriptorSet;
+    descriptorWrites.dstBinding = 0;
+    descriptorWrites.dstArrayElement = 0;
+    descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites.descriptorCount = 1;
+    descriptorWrites.pImageInfo = &imageInfo;
 
-        vkUpdateDescriptorSets(m_device, 1, &descriptorWrites, 0, nullptr);
-    }
+    vkUpdateDescriptorSets(m_device, 1, &descriptorWrites, 0, nullptr);
 
     return descriptorSet;
 }
