@@ -157,10 +157,17 @@ protected:
 
     glm::vec4 m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-    std::vector<BoundBuffer> m_indexBuffers;
-    std::vector<BoundBuffer> m_indexStagingBuffers;
-    std::vector<BoundBuffer> m_vertexBuffers;
-    std::vector<BoundBuffer> m_vertexStagingBuffers;
+    VkBuffer m_currentIndexBuffer;
+    VkBuffer m_currentIndexStagingBuffer;
+    VkBuffer m_currentVertexBuffer;
+    VkBuffer m_currentVertexStagingBuffer;
+
+    int m_currentBufferIndex = 0;
+
+    std::vector<std::vector<BoundBuffer>> m_indexBuffers;
+    std::vector<std::vector<BoundBuffer>> m_indexStagingBuffers;
+    std::vector<std::vector<BoundBuffer>> m_vertexBuffers;
+    std::vector<std::vector<BoundBuffer>> m_vertexStagingBuffers;
 
     uint16_t* m_indexWriteStart;
     uint16_t* m_currentIndexWrite;
@@ -291,13 +298,27 @@ protected:
 
     void unmapStagingBuffers();
 
-    void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const;
+    void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer);
 
     void updateUniformBuffer() const;
 
     void queueDrawCommand();
 
     void cleanupPendingDestroyBuffers();
+
+    void beginRenderPass();
+
+    void endRenderPass() const;
+
+    void cleanupBuffers(const std::vector<BoundBuffer> &buffers);
+
+    BoundBuffer & getIndexStagingBuffer();
+
+    BoundBuffer & getVertexStagingBuffer();
+
+    BoundBuffer &getIndexBuffer();
+
+    BoundBuffer &getVertexBuffer();
 };
 
 

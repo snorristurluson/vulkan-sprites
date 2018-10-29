@@ -1312,6 +1312,7 @@ bool Renderer::StartFrame() {
     m_currentColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
     startMainCommandBuffer();
+
     updateUniformBuffer();
 
     mapStagingBufferMemory();
@@ -1327,23 +1328,13 @@ void Renderer::EndFrame() {
     copyStagingBuffersToDevice(m_currentCommandBuffer);
     unmapStagingBuffers();
 
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_renderPass;
-    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_swapChainExtent;
-    renderPassInfo.clearValueCount = 1;
-    VkClearValue clearValue = {m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a};
-    renderPassInfo.pClearValues = &clearValue;
+    beginRenderPass();
 
-    vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame].buffer};
+    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame][m_currentBufferIndex].buffer};
     VkDeviceSize offsets[] = {0};
 
     vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame].buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame][m_currentBufferIndex].buffer, 0, VK_INDEX_TYPE_UINT16);
 
     for(auto& cmd: m_drawCommands) {
         std::array<VkDescriptorSet, 2> descriptorSets = {
@@ -1364,7 +1355,7 @@ void Renderer::EndFrame() {
     m_numDrawCommands = m_drawCommands.size();
     m_drawCommands.clear();
 
-    vkCmdEndRenderPass(m_currentCommandBuffer);
+    endRenderPass();
 
     if (vkEndCommandBuffer(m_currentCommandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer");
@@ -1436,39 +1427,126 @@ void Renderer::updateUniformBuffer() const
     vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
 }
 
-void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) const {
+void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) {
     tmFunction(0, 0);
 
     VkDeviceSize indexSize = (m_currentIndexWrite - m_indexWriteStart) * sizeof(uint16_t);
     VkDeviceSize vertexSize = (m_currentVertexWrite - m_vertexWriteStart) * sizeof(Vertex);
 
+    auto ib = getIndexBuffer();
+    auto vb = getVertexBuffer();
+
+    auto isb = getIndexStagingBuffer();
+    auto vsb = getVertexStagingBuffer();
+
     VkBufferCopy copyRegion = {};
     copyRegion.size = indexSize;
-    vkCmdCopyBuffer(
-            commandBuffer,
-            m_indexStagingBuffers[m_currentFrame].buffer,
-            m_indexBuffers[m_currentFrame].buffer,
-            1,
-            &copyRegion);
+    vkCmdCopyBuffer(commandBuffer, isb.buffer, ib.buffer, 1, &copyRegion);
 
     copyRegion.size = vertexSize;
-    vkCmdCopyBuffer(
-            commandBuffer,
-            m_vertexStagingBuffers[m_currentFrame].buffer,
-            m_vertexBuffers[m_currentFrame].buffer,
-            1,
-            &copyRegion);
+    vkCmdCopyBuffer(commandBuffer, vsb.buffer, vb.buffer, 1, &copyRegion);
+}
+
+BoundBuffer& Renderer::getVertexBuffer() {
+    auto& vertexBuffers = m_vertexBuffers[m_currentFrame];
+    if(m_currentBufferIndex == vertexBuffers.size()) {
+        auto buffer = CreateBuffer(
+                getVertexBufferSize(),
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        vertexBuffers.push_back(buffer);
+    }
+    if(m_currentBufferIndex > vertexBuffers.size()) {
+        // throw std::runtime_error("current buffer index value out of range");
+    }
+    auto& vb = vertexBuffers[m_currentBufferIndex];
+    return vb;
+}
+
+BoundBuffer& Renderer::getIndexBuffer() {
+    auto& indexBuffers = m_indexBuffers[m_currentFrame];
+    if(m_currentBufferIndex == indexBuffers.size()) {
+        auto buffer = CreateBuffer(
+                getIndexBufferSize(),
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        indexBuffers.push_back(buffer);
+    }
+    if(m_currentBufferIndex > indexBuffers.size()) {
+        // throw std::runtime_error("current buffer index value out of range");
+    }
+    auto& ib = indexBuffers[m_currentBufferIndex];
+    return ib;
+}
+
+BoundBuffer& Renderer::getVertexStagingBuffer() {
+    auto& vertexStagingBuffers = m_vertexStagingBuffers[m_currentFrame];
+    if(m_currentBufferIndex == vertexStagingBuffers.size()) {
+        logger->debug("Creating vertex staging buffer ({}, {})", m_currentFrame, m_currentBufferIndex);
+        auto buffer = CreateBuffer(
+                getVertexBufferSize(),
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        vertexStagingBuffers.push_back(buffer);
+    }
+    if(m_currentBufferIndex > vertexStagingBuffers.size()) {
+        throw std::runtime_error("current buffer index value out of range");
+    }
+    auto& vsb = vertexStagingBuffers[m_currentBufferIndex];
+    return vsb;
+}
+
+BoundBuffer& Renderer::getIndexStagingBuffer() {
+    auto& indexStagingBuffers = m_indexStagingBuffers[m_currentFrame];
+    if(m_currentBufferIndex == indexStagingBuffers.size()) {
+        logger->debug("Creating index staging buffer ({}, {})", m_currentFrame, m_currentBufferIndex);
+        auto buffer = CreateBuffer(
+                getIndexBufferSize(),
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        indexStagingBuffers.push_back(buffer);
+    }
+    if(m_currentBufferIndex > indexStagingBuffers.size()) {
+        throw std::runtime_error("current buffer index value out of range");
+    }
+    auto& isb = indexStagingBuffers[m_currentBufferIndex];
+    return isb;
+}
+
+void Renderer::mapStagingBufferMemory() {
+    void* data;
+
+    auto isb = getIndexStagingBuffer();
+    vkMapMemory(m_device, isb.bufferMemory, 0, getIndexBufferSize(), 0, &data);
+    m_indexWriteStart = reinterpret_cast<uint16_t*>(data);
+    m_currentIndexWrite = m_indexWriteStart;
+    m_indexWriteEnd =  m_indexWriteStart + getMaxNumIndices();
+
+    auto vsb = getVertexStagingBuffer();
+    vkMapMemory(m_device, vsb.bufferMemory, 0, getVertexBufferSize(), 0, &data);
+    m_vertexWriteStart = reinterpret_cast<Vertex*>(data);
+    m_currentVertexWrite = m_vertexWriteStart;
+    m_vertexWriteEnd = m_vertexWriteStart + getMaxNumVertices();
+
+    m_numIndices = 0;
+    m_indexOffset = 0;
+    m_numVertices = 0;
+    m_vertexOffset = 0;
 }
 
 void Renderer::unmapStagingBuffers() {
     tmFunction(0, 0);
 
-    vkUnmapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory);
+    auto& indexStagingBuffers = m_indexStagingBuffers[m_currentFrame];
+    auto& isb = indexStagingBuffers[m_currentBufferIndex];
+    vkUnmapMemory(m_device, isb.bufferMemory);
     m_indexWriteStart = nullptr;
     m_currentIndexWrite = nullptr;
     m_indexWriteEnd = nullptr;
 
-    vkUnmapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory);
+    auto& vertexStagingBuffers = m_vertexStagingBuffers[m_currentFrame];
+    auto& vsb = vertexStagingBuffers[m_currentBufferIndex];
+    vkUnmapMemory(m_device, vsb.bufferMemory);
     m_vertexWriteStart = nullptr;
     m_currentVertexWrite = nullptr;
     m_vertexWriteEnd = nullptr;
@@ -1499,28 +1577,6 @@ void Renderer::startMainCommandBuffer() {
     }
 
     vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-}
-
-void Renderer::mapStagingBufferMemory() {
-    VkDeviceSize indexBufferSize = getIndexBufferSize();
-    VkDeviceSize vertexBufferSize = getVertexBufferSize();
-
-    void* data;
-
-    vkMapMemory(m_device, m_indexStagingBuffers[m_currentFrame].bufferMemory, 0, indexBufferSize, 0, &data);
-    m_indexWriteStart = reinterpret_cast<uint16_t*>(data);
-    m_currentIndexWrite = m_indexWriteStart;
-    m_indexWriteEnd =  m_indexWriteStart + getMaxNumIndices();
-
-    vkMapMemory(m_device, m_vertexStagingBuffers[m_currentFrame].bufferMemory, 0, vertexBufferSize, 0, &data);
-    m_vertexWriteStart = reinterpret_cast<Vertex*>(data);
-    m_currentVertexWrite = m_vertexWriteStart;
-    m_vertexWriteEnd = m_vertexWriteStart + getMaxNumVertices();
-
-    m_numIndices = 0;
-    m_indexOffset = 0;
-    m_numVertices = 0;
-    m_vertexOffset = 0;
 }
 
 void Renderer::recreateSwapChain() {
@@ -1603,36 +1659,10 @@ void Renderer::DrawTriangles(const uint16_t *indices, size_t numIndices, const V
 }
 
 void Renderer::createIndexAndVertexBuffers() {
-    VkDeviceSize indexBufferSize = getIndexBufferSize();
-    VkDeviceSize vertexBufferSize = getVertexBufferSize();
-
     m_indexBuffers.resize(getMaxFramesInFlight());
     m_indexStagingBuffers.resize(getMaxFramesInFlight());
     m_vertexBuffers.resize(getMaxFramesInFlight());
     m_vertexStagingBuffers.resize(getMaxFramesInFlight());
-
-    for(uint32_t i = 0; i < getMaxFramesInFlight(); ++i) {
-        m_indexStagingBuffers[i] = CreateBuffer(
-                indexBufferSize,
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        m_indexBuffers[i] = CreateBuffer(
-                indexBufferSize,
-                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        m_vertexStagingBuffers[i] = CreateBuffer(
-                vertexBufferSize,
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        m_vertexBuffers[i] = CreateBuffer(
-                vertexBufferSize,
-                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    }
 }
 
 VkDeviceSize Renderer::getVertexBufferSize() { return getMaxNumVertices() * sizeof(Vertex); }
@@ -1641,10 +1671,16 @@ VkDeviceSize Renderer::getIndexBufferSize() { return getMaxNumIndices() * sizeof
 
 void Renderer::cleanupIndexAndVertexBuffers() {
     for(uint32_t i = 0; i < getMaxFramesInFlight(); ++i) {
-        DestroyBuffer(m_indexStagingBuffers[i]);
-        DestroyBuffer(m_indexBuffers[i]);
-        DestroyBuffer(m_vertexStagingBuffers[i]);
-        DestroyBuffer(m_vertexBuffers[i]);
+        cleanupBuffers(m_indexStagingBuffers[i]);
+        cleanupBuffers(m_indexBuffers[i]);
+        cleanupBuffers(m_vertexStagingBuffers[i]);
+        cleanupBuffers(m_vertexBuffers[i]);
+    }
+}
+
+void Renderer::cleanupBuffers(const std::vector<BoundBuffer> &buffers) {
+    for(auto b: buffers) {
+        DestroyBuffer(b);
     }
 }
 
@@ -1710,6 +1746,24 @@ void Renderer::SetBlendMode(BlendMode bm)
 BlendMode Renderer::GetBlendMode() const
 {
     return m_currentBlendMode;
+}
+
+void Renderer::beginRenderPass() {
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_nextFrame];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChainExtent;
+    renderPassInfo.clearValueCount = 1;
+    VkClearValue clearValue = {m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a};
+    renderPassInfo.pClearValues = &clearValue;
+
+    vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::endRenderPass() const {
+    vkCmdEndRenderPass(m_currentCommandBuffer);
 }
 
 #pragma clang diagnostic pop
