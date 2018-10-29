@@ -1294,6 +1294,7 @@ bool Renderer::StartFrame() {
 
     auto &perFrameCmds = m_perFrameCommandBuffer[m_currentFrame];
     if (!perFrameCmds.empty()) {
+        tmZone(0, 0, "vkFreeCommandBuffers");
         vkFreeCommandBuffers(
                 m_device,
                 m_perFrameCommandPool[m_currentFrame],
@@ -1441,6 +1442,8 @@ void Renderer::drawBatches() {
 
 void Renderer::updateUniformBuffer() const
 {
+    tmFunction(0, 0);
+
     int width, height;
     glfwGetFramebufferSize(m_window, &width, &height);
     UniformBufferObject ubo = {};
