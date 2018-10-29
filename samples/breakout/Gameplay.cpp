@@ -7,6 +7,7 @@
 #include "Font.h"
 #include "Gameplay.h"
 #include "telemetry.h"
+#include "Texture.h"
 
 static auto logger = GetLogger("gameplay");
 
@@ -32,6 +33,9 @@ void Gameplay::Init(Renderer &r) {
     m_ball.SetVelocity({500, 500});
     m_ball.SetRadius(10);
     m_ball.SetBounds(0.0f, 0.0f, m_fieldWidth, m_fieldHeight);
+
+    auto tex = r.CreateTexture("resources/ps1.png");
+    m_ball.SetTextureForParticles(tex);
 
 
     for(int y = 0; y < 5; ++y) {

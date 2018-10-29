@@ -28,6 +28,8 @@ public:
 
     void Update(float td) override;
 
+    void SetTextureForParticles(std::shared_ptr<ITexture> tex);
+
 protected:
     float m_radius;
     float m_minX;

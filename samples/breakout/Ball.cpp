@@ -15,8 +15,8 @@ Ball::Ball() :
 {
     m_emitter = m_particleSystem.AddEmitter();
     m_emitter->SetLifespan(0.7f);
-    m_emitter->SetSpeed(40.0f);
-    m_emitter->SetEmissionRate(75.0f);
+    //m_emitter->SetSpeed(250.0f);
+    m_emitter->SetEmissionRate(329.0f);
 }
 
 void Ball::SetRadius(float r) {
@@ -84,7 +84,7 @@ void Ball::Update(float td) {
         m_velocity.y *= -1.0f;
     }
 
-    float direction = atan2(m_velocity.y, m_velocity.x);
+    float direction = atan2(-m_velocity.y, -m_velocity.x);
     m_emitter->SetDirection(direction);
     m_emitter->SetPosition(m_position);
     m_particleSystem.Update(td);
@@ -114,4 +114,8 @@ bool Ball::CollideWithBrick(const Brick &brick) {
         m_velocity.y *= -1.0f;
     }
     return true;
+}
+
+void Ball::SetTextureForParticles(std::shared_ptr<ITexture> tex) {
+    m_emitter->SetTexture(tex);
 }

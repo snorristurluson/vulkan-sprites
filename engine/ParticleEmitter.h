@@ -6,9 +6,11 @@
 #define VULKAN_SPRITES_PARTICLEEMITTER_H
 
 #include "Particle.h"
+#include "ITexture.h"
 
 #include <vector>
 #include <random>
+#include <memory>
 
 class Renderer;
 class ParticleEmitter {
@@ -35,6 +37,9 @@ public:
     float GetSpeed() const;
     void SetSpeed(float s);
 
+    std::shared_ptr<ITexture> GetTexture() const;
+    void SetTexture(std::shared_ptr<ITexture> tex);
+
     void Update(float td);
     void Render(Renderer &renderer);
 
@@ -54,10 +59,13 @@ protected:
     float m_speed = 0.0f;
 
     glm::vec2 m_position;
+    glm::vec2 m_lastPosition;
     std::vector<Particle> m_particles;
 
     std::default_random_engine m_random_engine;
     std::uniform_real_distribution<float> m_rng;
+
+    std::shared_ptr<ITexture> m_texture;
 };
 
 #endif //VULKAN_SPRITES_PARTICLEEMITTER_H

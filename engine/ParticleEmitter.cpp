@@ -31,6 +31,7 @@ glm::vec2 ParticleEmitter::GetPosition() const {
 }
 
 void ParticleEmitter::SetPosition(glm::vec2 pos) {
+    m_lastPosition = m_position;
     m_position = pos;
 }
 
@@ -49,6 +50,7 @@ void ParticleEmitter::Update(float td) {
     }
 
     if(m_timeToEmit <= 0.0f) {
+        glm::vec2 d = m_lastPosition - m_position;
         auto deadIt = dead.begin();
         while(m_timeToEmit < td) {
             Particle* p;
@@ -58,11 +60,16 @@ void ParticleEmitter::Update(float td) {
                 auto& newParticle = m_particles.emplace_back();
                 p = &newParticle;
             }
-            p->timeRemaining = m_lifespan;
-            p->position = m_position;
+            p->timeRemaining = m_lifespan - m_timeToEmit;
             float x = cosf(m_direction + m_directionRange * m_rng(m_random_engine));
             float y = sinf(m_direction + m_directionRange * m_rng(m_random_engine));
             p->velocity = glm::vec2 {m_speed * x, m_speed * y};
+            p->position = m_position;
+//            if(m_timeToEmit > 0.0f)
+            {
+                float relativeAge = m_timeToEmit / td;
+                p->position += relativeAge * d;
+            }
             p->color = glm::vec4 {1.0f, 1.0f, 1.0f, 1.0f};
 
             m_timeToEmit += 1.0f/m_emissionRate;
@@ -72,7 +79,8 @@ void ParticleEmitter::Update(float td) {
 }
 
 void ParticleEmitter::Render(Renderer &r) {
-    r.SetBlendMode(BM_BLEND);
+    r.SetBlendMode(BM_ADD);
+    r.SetTexture(m_texture);
     for(auto& p: m_particles) {
         if(p.timeRemaining > 0.0f) {
             r.SetColor(p.color);
@@ -103,5 +111,13 @@ float ParticleEmitter::GetSpeed() const {
 
 void ParticleEmitter::SetSpeed(float s) {
     m_speed = s;
+}
+
+std::shared_ptr<ITexture> ParticleEmitter::GetTexture() const {
+    return m_texture;
+}
+
+void ParticleEmitter::SetTexture(std::shared_ptr<ITexture> tex) {
+    m_texture = tex;
 }
 
