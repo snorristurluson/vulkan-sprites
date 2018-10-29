@@ -38,7 +38,7 @@ void ParticlesApp::Run() {
     std::default_random_engine random_engine;
     std::uniform_real_distribution<float> rng;
 
-    for(int i = 0; i < 500; ++i) {
+    for(int i = 0; i < 5000; ++i) {
         auto em = ps.AddEmitter();
         em->SetEmissionRate(rng(random_engine) * 50.0f + 10.0f);
         em->SetPosition({rng(random_engine) * 800, rng(random_engine) * 600});
@@ -64,6 +64,7 @@ void ParticlesApp::Run() {
             char buffer[32];
             sprintf(buffer, "Num particles: %d", n);
             r.SetColor({1.0f, 0.5f, 0.5f, 1});
+            r.SetBlendMode(BM_BLEND);
             font->Draw(r, 32, 32, buffer);
             r.EndFrame();
         }

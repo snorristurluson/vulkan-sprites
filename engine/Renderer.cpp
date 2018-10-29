@@ -1311,11 +1311,11 @@ bool Renderer::StartFrame() {
     m_currentTextureWindow = m_defaultTexture->GetTextureWindow();
     m_currentColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
+    m_currentBufferIndex = 0;
+
     startMainCommandBuffer();
 
     updateUniformBuffer();
-
-    mapStagingBufferMemory();
 
     return true;
 }
@@ -1323,39 +1323,8 @@ bool Renderer::StartFrame() {
 void Renderer::EndFrame() {
     tmFunction(0, 0);
 
-    queueDrawCommand();
-
-    copyStagingBuffersToDevice(m_currentCommandBuffer);
-    unmapStagingBuffers();
-
-    beginRenderPass();
-
-    VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame][m_currentBufferIndex].buffer};
-    VkDeviceSize offsets[] = {0};
-
-    vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(m_currentCommandBuffer, m_indexBuffers[m_currentFrame][m_currentBufferIndex].buffer, 0, VK_INDEX_TYPE_UINT16);
-
-    for(auto& cmd: m_drawCommands) {
-        std::array<VkDescriptorSet, 2> descriptorSets = {
-                m_perFrameDescriptorSets[m_currentFrame],
-                cmd.descriptorSet
-        };
-        vkCmdBindDescriptorSets(m_currentCommandBuffer,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_pipelineLayout,
-                                0,
-                                descriptorSets.size(),
-                                descriptorSets.data(),
-                                0, nullptr);
-
-        vkCmdDrawIndexed(m_currentCommandBuffer, cmd.numIndices, 1, cmd.baseIndex, 0, 0);
-
-    }
-    m_numDrawCommands = m_drawCommands.size();
-    m_drawCommands.clear();
-
-    endRenderPass();
+    queueCurrentBatch();
+    drawBatches();
 
     if (vkEndCommandBuffer(m_currentCommandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer");
@@ -1413,6 +1382,63 @@ void Renderer::EndFrame() {
     m_currentFrame %= getMaxFramesInFlight();
 }
 
+void Renderer::queueCurrentBatch() {
+    queueDrawCommand();
+    copyStagingBuffersToDevice(m_currentCommandBuffer);
+    unmapStagingBuffers();
+
+    m_currentBufferIndex++;
+}
+
+void Renderer::drawBatches() {
+    beginRenderPass();
+
+    if(!m_drawCommands.empty()) {
+        int curBuffer = -1;
+
+        for(auto& cmd: m_drawCommands) {
+            if(cmd.bufferIndex != curBuffer) {
+                curBuffer = cmd.bufferIndex;
+                logger->debug("Binding {}, {}", m_currentFrame, curBuffer);
+
+                VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame][curBuffer].buffer};
+                VkDeviceSize offsets[] = {0};
+
+                vkCmdBindVertexBuffers(
+                        m_currentCommandBuffer,
+                        0,
+                        1,
+                        vertexBuffers,
+                        offsets);
+                vkCmdBindIndexBuffer(
+                        m_currentCommandBuffer,
+                        m_indexBuffers[m_currentFrame][curBuffer].buffer,
+                        0,
+                        VK_INDEX_TYPE_UINT16);
+            }
+
+            std::array<VkDescriptorSet, 2> descriptorSets = {
+                    m_perFrameDescriptorSets[m_currentFrame],
+                    cmd.descriptorSet
+            };
+            vkCmdBindDescriptorSets(m_currentCommandBuffer,
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    m_pipelineLayout,
+                                    0,
+                                    descriptorSets.size(),
+                                    descriptorSets.data(),
+                                    0, nullptr);
+
+            vkCmdDrawIndexed(m_currentCommandBuffer, cmd.numIndices, 1, cmd.baseIndex, 0, 0);
+
+        }
+    }
+    endRenderPass();
+
+    m_numDrawCommands = m_drawCommands.size();
+    m_drawCommands.clear();
+}
+
 void Renderer::updateUniformBuffer() const
 {
     int width, height;
@@ -1431,25 +1457,30 @@ void Renderer::copyStagingBuffersToDevice(VkCommandBuffer commandBuffer) {
     tmFunction(0, 0);
 
     VkDeviceSize indexSize = (m_currentIndexWrite - m_indexWriteStart) * sizeof(uint16_t);
+    if(indexSize > 0) {
+        auto ib = getIndexBuffer();
+        auto isb = getIndexStagingBuffer();
+
+        VkBufferCopy copyRegion = {};
+        copyRegion.size = indexSize;
+        vkCmdCopyBuffer(commandBuffer, isb.buffer, ib.buffer, 1, &copyRegion);
+    }
+
     VkDeviceSize vertexSize = (m_currentVertexWrite - m_vertexWriteStart) * sizeof(Vertex);
+    if(vertexSize > 0) {
+        auto vb = getVertexBuffer();
+        auto vsb = getVertexStagingBuffer();
 
-    auto ib = getIndexBuffer();
-    auto vb = getVertexBuffer();
-
-    auto isb = getIndexStagingBuffer();
-    auto vsb = getVertexStagingBuffer();
-
-    VkBufferCopy copyRegion = {};
-    copyRegion.size = indexSize;
-    vkCmdCopyBuffer(commandBuffer, isb.buffer, ib.buffer, 1, &copyRegion);
-
-    copyRegion.size = vertexSize;
-    vkCmdCopyBuffer(commandBuffer, vsb.buffer, vb.buffer, 1, &copyRegion);
+        VkBufferCopy copyRegion = {};
+        copyRegion.size = vertexSize;
+        vkCmdCopyBuffer(commandBuffer, vsb.buffer, vb.buffer, 1, &copyRegion);
+    }
 }
 
 BoundBuffer& Renderer::getVertexBuffer() {
     auto& vertexBuffers = m_vertexBuffers[m_currentFrame];
     if(m_currentBufferIndex == vertexBuffers.size()) {
+        logger->debug("Creating vertex buffer ({}, {})", m_currentFrame, m_currentBufferIndex);
         auto buffer = CreateBuffer(
                 getVertexBufferSize(),
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -1457,7 +1488,7 @@ BoundBuffer& Renderer::getVertexBuffer() {
         vertexBuffers.push_back(buffer);
     }
     if(m_currentBufferIndex > vertexBuffers.size()) {
-        // throw std::runtime_error("current buffer index value out of range");
+        throw std::runtime_error("current buffer index value out of range");
     }
     auto& vb = vertexBuffers[m_currentBufferIndex];
     return vb;
@@ -1466,6 +1497,7 @@ BoundBuffer& Renderer::getVertexBuffer() {
 BoundBuffer& Renderer::getIndexBuffer() {
     auto& indexBuffers = m_indexBuffers[m_currentFrame];
     if(m_currentBufferIndex == indexBuffers.size()) {
+        logger->debug("Creating index buffer ({}, {})", m_currentFrame, m_currentBufferIndex);
         auto buffer = CreateBuffer(
                 getIndexBufferSize(),
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
@@ -1473,7 +1505,7 @@ BoundBuffer& Renderer::getIndexBuffer() {
         indexBuffers.push_back(buffer);
     }
     if(m_currentBufferIndex > indexBuffers.size()) {
-        // throw std::runtime_error("current buffer index value out of range");
+        throw std::runtime_error("current buffer index value out of range");
     }
     auto& ib = indexBuffers[m_currentBufferIndex];
     return ib;
@@ -1537,15 +1569,16 @@ void Renderer::mapStagingBufferMemory() {
 void Renderer::unmapStagingBuffers() {
     tmFunction(0, 0);
 
-    auto& indexStagingBuffers = m_indexStagingBuffers[m_currentFrame];
-    auto& isb = indexStagingBuffers[m_currentBufferIndex];
+    if(!m_indexWriteStart) {
+        return;
+    }
+    auto isb = getIndexStagingBuffer();
     vkUnmapMemory(m_device, isb.bufferMemory);
     m_indexWriteStart = nullptr;
     m_currentIndexWrite = nullptr;
     m_indexWriteEnd = nullptr;
 
-    auto& vertexStagingBuffers = m_vertexStagingBuffers[m_currentFrame];
-    auto& vsb = vertexStagingBuffers[m_currentBufferIndex];
+    auto vsb = getVertexStagingBuffer();
     vkUnmapMemory(m_device, vsb.bufferMemory);
     m_vertexWriteStart = nullptr;
     m_currentVertexWrite = nullptr;
@@ -1618,17 +1651,23 @@ void Renderer::DrawSprite(float x, float y, float width, float height) {
 }
 
 void Renderer::DrawTriangles(const uint16_t *indices, size_t numIndices, const Vertex *vertices, size_t numVertices) {
-    if(!m_currentIndexWrite) {
-        throw std::runtime_error("index write destination is null");
+    if(!m_currentCommandBuffer) {
+        throw std::runtime_error("no command buffer");
     }
-    if(!m_currentVertexWrite) {
-        throw std::runtime_error("vertex write destination is null");
+
+    if(!m_currentIndexWrite || !m_currentVertexWrite) {
+        mapStagingBufferMemory();
     }
-    if(m_currentVertexWrite + numVertices >= m_vertexWriteEnd) {
-        throw std::runtime_error("vertex buffer full");
+
+    auto vbFull = m_currentVertexWrite + numVertices >= m_vertexWriteEnd;
+    auto ibFull = m_currentIndexWrite + numIndices >= m_indexWriteEnd;
+    if(vbFull || ibFull) {
+        queueCurrentBatch();
+        mapStagingBufferMemory();
     }
-    if(m_currentIndexWrite + numIndices >= m_indexWriteEnd) {
-        throw std::runtime_error("index buffer full");
+
+    if(!m_currentIndexWrite || !m_currentVertexWrite) {
+        throw std::runtime_error("write destination is null");
     }
 
     auto base = static_cast<uint16_t>(m_currentVertexWrite - m_vertexWriteStart);
@@ -1654,7 +1693,12 @@ void Renderer::DrawTriangles(const uint16_t *indices, size_t numIndices, const V
         indexRead++;
     }
 
+    auto before = m_numIndices;
     m_numIndices += numIndices;
+    auto after = m_numIndices;
+    if(after < before) {
+        throw std::runtime_error("overflow");
+    }
     m_numVertices += numVertices;
 }
 
@@ -1689,7 +1733,7 @@ VkDeviceSize Renderer::getMaxNumIndices() {
 }
 
 VkDeviceSize Renderer::getMaxNumVertices() {
-    return 1024*1024;
+    return 64*1024;
 }
 
 VkDeviceSize Renderer::GetNumIndices() {
@@ -1712,14 +1756,18 @@ void Renderer::SetTexture(std::shared_ptr<ITexture> texture) {
     m_currentTextureWindow = texture->GetTextureWindow();
 }
 
-void Renderer::queueDrawCommand() {
+bool Renderer::queueDrawCommand() {
     if(m_numIndices > 0) {
-        m_drawCommands.emplace_back(m_currentDescriptorSet, m_indexOffset, m_numIndices);
+        m_drawCommands.emplace_back(m_currentDescriptorSet, m_indexOffset, m_numIndices, m_currentBufferIndex);
         m_indexOffset += m_numIndices;
         m_numIndices = 0;
         m_vertexOffset += m_numVertices;
         m_numVertices = 0;
+
+        return true;
     }
+
+    return false;
 }
 
 unsigned long Renderer::GetNumDrawCommands() {

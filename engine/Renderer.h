@@ -157,11 +157,6 @@ protected:
 
     glm::vec4 m_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-    VkBuffer m_currentIndexBuffer;
-    VkBuffer m_currentIndexStagingBuffer;
-    VkBuffer m_currentVertexBuffer;
-    VkBuffer m_currentVertexStagingBuffer;
-
     int m_currentBufferIndex = 0;
 
     std::vector<std::vector<BoundBuffer>> m_indexBuffers;
@@ -176,10 +171,10 @@ protected:
     Vertex* m_currentVertexWrite;
     Vertex* m_vertexWriteEnd;
 
-    uint16_t m_numIndices;
-    uint16_t m_indexOffset;
-    uint16_t m_numVertices;
-    uint16_t m_vertexOffset;
+    uint16_t m_numIndices = 0;
+    uint16_t m_indexOffset = 0;
+    uint16_t m_numVertices = 0;
+    uint16_t m_vertexOffset = 0;
 
     std::shared_ptr<ITexture> m_defaultTexture;
     VkDescriptorSet m_currentDescriptorSet;
@@ -189,14 +184,16 @@ protected:
     BlendMode m_currentBlendMode;
 
     struct DrawCommand {
-        DrawCommand(VkDescriptorSet ds, uint16_t bi, uint16_t ni) :
+        DrawCommand(VkDescriptorSet ds, uint16_t bi, uint16_t ni, int buf) :
             descriptorSet(ds),
             baseIndex(bi),
-            numIndices(ni)
+            numIndices(ni),
+            bufferIndex(buf)
         {}
         VkDescriptorSet descriptorSet;
         uint16_t baseIndex;
         uint16_t numIndices;
+        int bufferIndex;
     };
 
     std::vector<DrawCommand> m_drawCommands;
@@ -302,7 +299,7 @@ protected:
 
     void updateUniformBuffer() const;
 
-    void queueDrawCommand();
+    bool queueDrawCommand();
 
     void cleanupPendingDestroyBuffers();
 
@@ -319,6 +316,10 @@ protected:
     BoundBuffer &getIndexBuffer();
 
     BoundBuffer &getVertexBuffer();
+
+    void queueCurrentBatch();
+
+    void drawBatches();
 };
 
 
