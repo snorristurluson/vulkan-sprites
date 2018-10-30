@@ -7,6 +7,7 @@
 
 #include "Particle.h"
 #include "ITexture.h"
+#include "Vertex.h"
 
 #include <vector>
 #include <random>
@@ -62,6 +63,9 @@ protected:
     glm::vec2 m_position = glm::vec2 {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     glm::vec2 m_lastPosition = glm::vec2 {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     std::vector<Particle> m_particles;
+    std::vector<uint16_t> m_indices;
+    std::vector<Vertex> m_vertices;
+    int m_numParticlesAlive;
 
     std::default_random_engine m_random_engine;
     std::uniform_real_distribution<float> m_rng;
