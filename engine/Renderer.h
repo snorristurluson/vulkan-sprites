@@ -92,6 +92,10 @@ public:
     void DrawSprite(float x, float y, float width, float height);
     void DrawTriangles(const uint16_t* indices, size_t numIndices, const Vertex* vertices, size_t numVertices);
 
+    bool ReserveTriangles(size_t numIndices, size_t numVertices, uint16_t *&indices, Vertex *&vertices,
+                              u_int16_t &baseIndex);
+    void CommitTriangles(size_t numIndices, size_t numVertices);
+
     VkDeviceSize GetNumIndices();
     VkDeviceSize GetNumVertices();
 

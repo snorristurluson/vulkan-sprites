@@ -1696,13 +1696,43 @@ void Renderer::DrawTriangles(const uint16_t *indices, size_t numIndices, const V
         indexRead++;
     }
 
-    auto before = m_numIndices;
     m_numIndices += numIndices;
-    auto after = m_numIndices;
-    if(after < before) {
-        throw std::runtime_error("overflow");
-    }
     m_numVertices += numVertices;
+}
+
+bool Renderer::ReserveTriangles(size_t numIndices, size_t numVertices, uint16_t *&indices, Vertex *&vertices,
+                                u_int16_t &baseIndex) {
+    if(!m_currentCommandBuffer) {
+        throw std::runtime_error("no command buffer");
+    }
+
+    if(!m_currentIndexWrite || !m_currentVertexWrite) {
+        mapStagingBufferMemory();
+    }
+
+    auto vbFull = m_currentVertexWrite + numVertices >= m_vertexWriteEnd;
+    auto ibFull = m_currentIndexWrite + numIndices >= m_indexWriteEnd;
+    if(vbFull || ibFull) {
+        queueCurrentBatch();
+        mapStagingBufferMemory();
+    }
+
+    if(!m_currentIndexWrite || !m_currentVertexWrite) {
+        throw std::runtime_error("write destination is null");
+    }
+
+    indices = m_currentIndexWrite;
+    vertices = m_currentVertexWrite;
+    baseIndex = static_cast<uint16_t>(m_currentVertexWrite - m_vertexWriteStart);
+
+    return true;
+}
+
+void Renderer::CommitTriangles(size_t numIndices, size_t numVertices) {
+    m_currentVertexWrite += numVertices;
+    m_numVertices += numVertices;
+    m_currentIndexWrite += numIndices;
+    m_numIndices += numIndices;
 }
 
 void Renderer::createIndexAndVertexBuffers() {
