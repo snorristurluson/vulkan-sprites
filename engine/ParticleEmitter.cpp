@@ -31,7 +31,12 @@ glm::vec2 ParticleEmitter::GetPosition() const {
 }
 
 void ParticleEmitter::SetPosition(glm::vec2 pos) {
-    m_lastPosition = m_position;
+    static glm::vec2 initialValue {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    if(m_position ==  initialValue) {
+        m_lastPosition = pos;
+    } else {
+        m_lastPosition = m_position;
+    }
     m_position = pos;
 }
 

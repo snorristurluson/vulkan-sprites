@@ -11,6 +11,7 @@
 #include <vector>
 #include <random>
 #include <memory>
+#include <limits>
 
 class Renderer;
 class ParticleEmitter {
@@ -58,8 +59,8 @@ protected:
 
     float m_speed = 0.0f;
 
-    glm::vec2 m_position;
-    glm::vec2 m_lastPosition;
+    glm::vec2 m_position = glm::vec2 {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    glm::vec2 m_lastPosition = glm::vec2 {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     std::vector<Particle> m_particles;
 
     std::default_random_engine m_random_engine;
