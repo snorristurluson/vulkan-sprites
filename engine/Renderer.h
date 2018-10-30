@@ -13,6 +13,8 @@
 #include <glm/vec4.hpp>
 #include "DebugMessenger.h"
 #include "ITexture.h"
+#include "PipelineSprites.h"
+#include "BoundBuffer.h"
 
 class Texture;
 class TextureAtlas;
@@ -21,11 +23,6 @@ class Vertex;
 struct BoundImage {
     VkImage image;
     VkDeviceMemory imageMemory;
-};
-
-struct BoundBuffer {
-    VkBuffer buffer;
-    VkDeviceMemory bufferMemory;
 };
 
 enum BlendMode {
@@ -135,23 +132,12 @@ protected:
     VkDebugUtilsMessengerEXT m_callback;
     std::unique_ptr<DebugMessenger> m_debugMessenger;
 
-    VkRenderPass m_renderPass;
-
-    VkDescriptorSetLayout m_perFrameDescriptorSetLayout;
-    VkDescriptorSetLayout m_perTextureDescriptorSetLayout;
-
-    VkPipelineLayout m_pipelineLayout;
-    VkPipeline m_graphicsPipeline;
-
     VkCommandPool m_commandPool;
     std::vector<VkCommandPool> m_perFrameCommandPool;
     std::vector<std::vector<VkCommandBuffer>> m_perFrameCommandBuffer;
     VkCommandBuffer m_currentCommandBuffer;
 
-    VkDescriptorPool m_descriptorPool;
-    std::vector<VkDescriptorSet> m_perFrameDescriptorSets;
-
-    std::vector<BoundBuffer> m_uniformBuffers;
+    PipelineSprites m_pipelineSprites;
 
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
@@ -243,29 +229,11 @@ protected:
 
     VkImageView createImageView(VkImage image, VkFormat format);
 
-    void createRenderPass();
-
-    void createDescriptorSetLayouts();
-
-    void createGraphicsPipeline();
-
-    VkShaderModule createShaderModule(uint8_t* code, size_t codeSize);
-
-    void createFramebuffers();
-
     void createCommandPool();
-
-    uint32_t findMemoryType(uint32_t bits, VkMemoryPropertyFlags properties);
 
     VkCommandBuffer beginSingleTimeCommands();
 
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-
-    void createDescriptorPool();
-
-    void createUniformBuffers();
-
-    void createPerFrameDescriptorSets();
 
     void createSyncObjects();
 
@@ -274,8 +242,6 @@ protected:
     void cleanupSwapChain();
 
     void cleanupSyncObjects();
-
-    void cleanupUniformBuffers();
 
     void cleanupCommandPools();
 
@@ -301,15 +267,9 @@ protected:
 
     void copyStagingBuffersToDevice(VkCommandBuffer commandBuffer);
 
-    void updateUniformBuffer() const;
-
     bool queueDrawCommand();
 
     void cleanupPendingDestroyBuffers();
-
-    void beginRenderPass();
-
-    void endRenderPass() const;
 
     void cleanupBuffers(const std::vector<BoundBuffer> &buffers);
 

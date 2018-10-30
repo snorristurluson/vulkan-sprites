@@ -28,19 +28,19 @@ TEST_CASE("Renderer") {
     auto window = glfwCreateWindow(800, 600, "TextureAtlasTest", nullptr, nullptr);
 
     SECTION("Initialize") {
-        SECTION("without validation") {
-            Renderer r;
-            r.Initialize(window, Renderer::DISABLE_VALIDATION);
-            REQUIRE(r.IsInitialized());
-            REQUIRE(!r.GetDebugMessenger());
-        }
-
         SECTION("with validation") {
             Renderer r;
             r.Initialize(window, Renderer::ENABLE_VALIDATION);
             REQUIRE(r.IsInitialized());
             REQUIRE(r.GetDebugMessenger());
             REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
+        }
+
+        SECTION("without validation") {
+            Renderer r;
+            r.Initialize(window, Renderer::DISABLE_VALIDATION);
+            REQUIRE(r.IsInitialized());
+            REQUIRE(!r.GetDebugMessenger());
         }
 
         SECTION("multiple calls throw") {

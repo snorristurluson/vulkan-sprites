@@ -22,7 +22,11 @@ add_library(
         telemetry.cpp telemetry.h
         ParticleSystem.cpp ParticleSystem.h
         ParticleEmitter.cpp ParticleEmitter.h
-        Particle.cpp Particle.h Curve.cpp Curve.h)
+        Particle.cpp Particle.h Curve.cpp Curve.h
+        PipelineSprites.cpp PipelineSprites.h
+        BoundBuffer.cpp BoundBuffer.h
+        PhysicalDevice.cpp PhysicalDevice.h
+)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES
