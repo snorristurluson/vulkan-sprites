@@ -1,7 +1,16 @@
 # Vulkan sprite rendering engine
-This is my first attempt at doing something with Vulkan, and is based on the Vulkan
-tutorial found at 
-https://vulkan-tutorial.com/
+The primary driver for this project is to learn to use Vulkan, but I 
+also want to try some things in the overall architecture
+and infrastructure of a game engine.
+
+Follow [my blog](https://snorristurluson.github.io/) for
+discussions about my learnings along the way.
+
+The initial iteration of the renderer is based on the Vulkan tutorial
+found at https://vulkan-tutorial.com/ - I highly recommend it if you
+are new to Vulkan, and I've looked to
+[Sascha Willems](https://github.com/SaschaWillems/Vulkan) for 
+reference as well.
 
 ## Dependencies
 
