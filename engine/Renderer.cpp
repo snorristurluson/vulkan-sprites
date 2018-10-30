@@ -1212,6 +1212,7 @@ glm::vec4 Renderer::GetClearColor() const {
 
 void Renderer::SetClearColor(const glm::vec4 &clearColor) {
     m_clearColor = clearColor;
+    m_pipelineSprites.SetClearColor(clearColor);
 }
 
 void Renderer::DrawSprite(float x, float y, float width, float height) {

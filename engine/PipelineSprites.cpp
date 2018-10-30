@@ -7,6 +7,8 @@
 #include "Vertex.h"
 #include <stdexcept>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-stack-address"
 #define MAX_NUM_TEXTURES 256
 
 struct UniformBufferObject {
@@ -21,10 +23,9 @@ void PipelineSprites::Initialize(VkDevice device, VkPhysicalDevice physicalDevic
     m_swapChain = swapchain;
     m_frameBufferImageFormat = format;
 
-    uint32_t imageCount;
-    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
-    m_frameBufferImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_frameBufferImages.data());
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &m_imageCount, nullptr);
+    m_frameBufferImages.resize(m_imageCount);
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &m_imageCount, m_frameBufferImages.data());
 
 
     createUniformBuffers();
@@ -405,20 +406,20 @@ void PipelineSprites::cleanupUniformBuffers() {
     }
 }
 
-void PipelineSprites::updateUniformBuffer() const {
-//    int width, height;
-//    glfwGetFramebufferSize(m_window, &width, &height);
-//    UniformBufferObject ubo = {};
-//    ubo.extent.x = width;
-//    ubo.extent.y = height;
-//
-//    void* data;
-//    vkMapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory, 0, sizeof(ubo), 0, &data);
-//    memcpy(data, &ubo, sizeof(ubo));
-//    vkUnmapMemory(m_device, m_uniformBuffers[m_currentFrame].bufferMemory);
+void PipelineSprites::updateUniformBuffer(int frameIx) {
+    UniformBufferObject ubo = {};
+    ubo.extent.x = m_frameBufferExtent.width;
+    ubo.extent.y = m_frameBufferExtent.height;
+
+    void* data;
+    vkMapMemory(m_device, m_uniformBuffers[frameIx].bufferMemory, 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(m_device, m_uniformBuffers[frameIx].bufferMemory);
 }
 
 void PipelineSprites::BeginRenderPass(VkCommandBuffer cmdBuffer, int frameIx) {
+    updateUniformBuffer(frameIx);
+
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = m_renderPass;
@@ -437,7 +438,7 @@ void PipelineSprites::EndRenderPass(VkCommandBuffer cmdBuffer) {
 }
 
 int PipelineSprites::getMaxFramesInFlight() {
-    return 3; // TODO
+    return m_imageCount;
 }
 
 VkImageView PipelineSprites::createImageView(VkImage image, VkFormat format) {
@@ -467,3 +468,9 @@ void PipelineSprites::createImageViews() {
         m_frameBufferImageViews[i] = createImageView(m_frameBufferImages[i], m_frameBufferImageFormat);
     }
 }
+
+void PipelineSprites::SetClearColor(const glm::vec4 &clearColor) {
+    m_clearColor = clearColor;
+}
+
+#pragma clang diagnostic pop

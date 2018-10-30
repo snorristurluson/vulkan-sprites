@@ -27,10 +27,13 @@ public:
 
     void EndRenderPass(VkCommandBuffer cmdBuffer);
 
+    void SetClearColor(const glm::vec4 &clearColor);
+
 protected:
     VkDevice m_device;
     VkPhysicalDevice m_physicalDevice;
     VkSwapchainKHR m_swapChain;
+    uint32_t m_imageCount;
     VkPipeline m_graphicsPipeline;
     VkPipelineLayout m_pipelineLayout;
     VkDescriptorPool m_descriptorPool;
@@ -64,7 +67,7 @@ protected:
 
     void cleanupUniformBuffers();
 
-    void updateUniformBuffer() const;
+    void updateUniformBuffer(int frameIx);
 
     void createPipeline();
 
