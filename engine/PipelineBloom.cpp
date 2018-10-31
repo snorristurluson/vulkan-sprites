@@ -68,11 +68,38 @@ void PipelineBloom::Cleanup() {
 
 void PipelineBloom::Bloom(uint32_t currentFrameIx, uint32_t nextFrameIx, VkCommandBuffer cmdBuffer) {
     // bind pipeline
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
     // begin render pass
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_frameBuffers[nextFrameIx];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_frameBufferExtent;
+    renderPassInfo.clearValueCount = 1;
+    VkClearValue clearValue = {1,1,1,1};
+    renderPassInfo.pClearValues = &clearValue;
+
+    vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
     // set viewport and clipping
     // bind descriptor set
+    auto& ds = m_descriptorSets[currentFrameIx];
+    vkCmdBindDescriptorSets(
+            cmdBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_pipelineLayout,
+            0,
+            1,
+            &ds,
+            0,
+            nullptr);
+    vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+
     // draw fullscreen quad
     // end render pass
+    vkCmdEndRenderPass(cmdBuffer);
 }
 
 void PipelineBloom::createUniformBuffers() {
