@@ -9,6 +9,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-stack-address"
+
 #define MAX_NUM_TEXTURES 256
 
 struct UniformBufferObject {
@@ -437,7 +438,7 @@ void PipelineSprites::EndRenderPass(VkCommandBuffer cmdBuffer) {
     vkCmdEndRenderPass(cmdBuffer);
 }
 
-int PipelineSprites::getMaxFramesInFlight() {
+uint32_t PipelineSprites::getMaxFramesInFlight() {
     return m_imageCount;
 }
 

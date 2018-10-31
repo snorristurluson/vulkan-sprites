@@ -17,6 +17,7 @@ public:
     void Initialize(VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D vpExtent,
                         VkSwapchainKHR swapchain, VkFormat format);
     void Cleanup();
+
     VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
 
     VkPipeline GetPipeline();
@@ -50,28 +51,24 @@ protected:
     std::vector<BoundBuffer> m_uniformBuffers;
 
     glm::vec4 m_clearColor;
+
+protected:
     VkShaderModule createShaderModule(uint8_t *code, size_t codeSize);
     void createDescriptorPool();
     void createPerFrameDescriptorSets();
     void createDescriptorSetLayouts();
-
     void createRenderPass();
     void createFramebuffers();
     VkImageView createImageView(VkImage image, VkFormat format);
-
     void createImageViews();
-
     void createUniformBuffers();
-
-
+    void createPipeline();
 
     void cleanupUniformBuffers();
 
     void updateUniformBuffer(int frameIx);
 
-    void createPipeline();
-
-    int getMaxFramesInFlight();
+    uint32_t getMaxFramesInFlight();
 };
 
 
