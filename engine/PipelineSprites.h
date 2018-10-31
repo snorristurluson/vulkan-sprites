@@ -15,7 +15,7 @@
 class PipelineSprites {
 public:
     void Initialize(VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D vpExtent,
-                        VkSwapchainKHR swapchain, VkFormat format);
+                    std::vector<VkImage> frameBuffers, VkFormat format);
     void Cleanup();
 
     VkDescriptorSet CreateTextureDescriptorSet(VkImageView imageView, VkSampler sampler);
@@ -33,7 +33,6 @@ public:
 protected:
     VkDevice m_device;
     VkPhysicalDevice m_physicalDevice;
-    VkSwapchainKHR m_swapChain;
     uint32_t m_imageCount;
     VkPipeline m_graphicsPipeline;
     VkPipelineLayout m_pipelineLayout;

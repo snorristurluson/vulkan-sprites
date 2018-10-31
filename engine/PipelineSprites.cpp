@@ -17,17 +17,13 @@ struct UniformBufferObject {
 };
 
 void PipelineSprites::Initialize(VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D vpExtent,
-                                 VkSwapchainKHR swapchain, VkFormat format) {
+                                 std::vector<VkImage> frameBuffers, VkFormat format) {
     m_device = device;
     m_physicalDevice = physicalDevice;
     m_frameBufferExtent = vpExtent;
-    m_swapChain = swapchain;
     m_frameBufferImageFormat = format;
-
-    vkGetSwapchainImagesKHR(m_device, m_swapChain, &m_imageCount, nullptr);
-    m_frameBufferImages.resize(m_imageCount);
-    vkGetSwapchainImagesKHR(m_device, m_swapChain, &m_imageCount, m_frameBufferImages.data());
-
+    m_frameBufferImages = frameBuffers;
+    m_imageCount = static_cast<uint32_t>(frameBuffers.size());
 
     createUniformBuffers();
     createDescriptorPool();

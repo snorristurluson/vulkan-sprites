@@ -8,6 +8,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <vulkan/vulkan.h>
+#include <string>
 
 class ShaderLib {
 public:
@@ -18,5 +20,6 @@ public:
     static size_t GetPixelShaderSize();
 };
 
+VkShaderModule CreateShaderModule(const std::string& name);
 
 #endif //VULKAN_SPRITES_SHADERLIB_H

@@ -209,7 +209,7 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createIndexAndVertexBuffers();
     m_buffersToDestroyLater.resize(getMaxFramesInFlight());
 
-    m_pipelineSprites.Initialize(m_device, m_physicalDevice, m_swapChainExtent, m_swapChain,
+    m_pipelineSprites.Initialize(m_device, m_physicalDevice, m_swapChainExtent, m_swapChainImages,
                                  m_swapChainImageFormat);
 
     uint8_t whitePixel[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -465,6 +465,11 @@ void Renderer::createSwapChain() {
 
     m_swapChainImageFormat = surfaceFormat.format;
     m_swapChainExtent = extent;
+
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
+    m_swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data());
+
 }
 
 void Renderer::createImageViews() {
@@ -476,7 +481,7 @@ void Renderer::createImageViews() {
 }
 
 uint32_t Renderer::getMaxFramesInFlight() {
-    return 3; // TODO static_cast<uint32_t>(m_swapChainImages.size());
+    return static_cast<uint32_t>(m_swapChainImages.size());
 }
 
 VkImageView Renderer::createImageView(VkImage image, VkFormat format) {
