@@ -209,8 +209,27 @@ void Renderer::Initialize(GLFWwindow *window, Renderer::ValidationState validati
     createIndexAndVertexBuffers();
     m_buffersToDestroyLater.resize(getMaxFramesInFlight());
 
-    m_pipelineSprites.Initialize(m_device, m_physicalDevice, m_swapChainExtent, m_swapChainImages,
-                                 m_swapChainImageFormat);
+    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+    m_frameBufferImages.resize(getMaxFramesInFlight());
+    std::vector<VkImage> frameBuffers(getMaxFramesInFlight());
+    for(int i = 0; i < getMaxFramesInFlight(); ++i) {
+        auto img = CreateImage(
+                m_swapChainExtent.width,
+                m_swapChainExtent.height,
+                format,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_frameBufferImages[i] = img;
+        frameBuffers[i] = img.image;
+    }
+    m_pipelineSprites.Initialize(m_device, m_physicalDevice, m_swapChainExtent, frameBuffers,
+                                 format);
+
+    m_pipelineBloom.Initialize(m_device, m_physicalDevice, m_swapChainExtent, frameBuffers,
+                               format,
+                               m_swapChainImages,
+                               m_swapChainImageFormat);
 
     uint8_t whitePixel[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     m_defaultTexture = std::make_shared<Texture>(this, 1, 1, &whitePixel[0]);
@@ -787,6 +806,11 @@ void Renderer::cleanup() {
     cleanupCommandPools();
 
     m_pipelineSprites.Cleanup();
+    m_pipelineBloom.Cleanup();
+
+    for(auto fb: m_frameBufferImages) {
+        DestroyImage(fb);
+    }
 
     vkDestroyDevice(m_device, nullptr);
 
@@ -924,6 +948,8 @@ void Renderer::EndFrame() {
     queueCurrentBatch();
     drawBatches();
 
+    m_pipelineBloom.Bloom(m_currentFrame, m_nextFrame, m_currentCommandBuffer);
+
     if (vkEndCommandBuffer(m_currentCommandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer");
     }
@@ -997,7 +1023,6 @@ void Renderer::drawBatches() {
         for(auto& cmd: m_drawCommands) {
             if(cmd.bufferIndex != curBuffer) {
                 curBuffer = cmd.bufferIndex;
-                logger->debug("Binding {}, {}", m_currentFrame, curBuffer);
 
                 VkBuffer vertexBuffers[] = {m_vertexBuffers[m_currentFrame][curBuffer].buffer};
                 VkDeviceSize offsets[] = {0};

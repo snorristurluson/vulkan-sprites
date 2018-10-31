@@ -12,9 +12,11 @@
 
 #define MAX_NUM_TEXTURES 256
 
-struct UniformBufferObject {
-    glm::vec2 extent;
-};
+namespace {
+    struct UniformBufferObject {
+        glm::vec2 extent;
+    };
+}
 
 void PipelineSprites::Initialize(VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D vpExtent,
                                  std::vector<VkImage> frameBuffers, VkFormat format) {
@@ -57,9 +59,8 @@ void PipelineSprites::Cleanup() {
 }
 
 void PipelineSprites::createPipeline() {
-    VkShaderModule vertShaderModule = createShaderModule(ShaderLib::GetVertexShader(),
-                                                         ShaderLib::GetVertexShaderSize());
-    VkShaderModule fragShaderModule = createShaderModule(ShaderLib::GetPixelShader(), ShaderLib::GetPixelShaderSize());
+    VkShaderModule vertShaderModule = CreateShaderModule(m_device, "spriteVertex");
+    VkShaderModule fragShaderModule = CreateShaderModule(m_device, "spriteFragment");
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -180,20 +181,6 @@ void PipelineSprites::createPipeline() {
 
     vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
     vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
-}
-
-VkShaderModule PipelineSprites::createShaderModule(uint8_t *code, size_t codeSize) {
-    VkShaderModuleCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = codeSize;
-    createInfo.pCode = reinterpret_cast<const uint32_t *>(code);
-
-    VkShaderModule shaderModule;
-    if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create shader module!");
-    }
-
-    return shaderModule;
 }
 
 void PipelineSprites::createDescriptorSetLayouts() {

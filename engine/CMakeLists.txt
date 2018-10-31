@@ -26,7 +26,7 @@ add_library(
         PipelineSprites.cpp PipelineSprites.h
         BoundBuffer.cpp BoundBuffer.h
         PhysicalDevice.cpp PhysicalDevice.h
-)
+        PipelineBloom.cpp PipelineBloom.h)
 
 # Shaders
 file(GLOB_RECURSE GLSL_SOURCE_FILES

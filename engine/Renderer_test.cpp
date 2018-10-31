@@ -22,33 +22,42 @@ TEST_CASE("Renderer basics") {
     }
 }
 
-TEST_CASE("Renderer") {
+TEST_CASE("Renderer initialization") {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     auto window = glfwCreateWindow(800, 600, "TextureAtlasTest", nullptr, nullptr);
 
+    Renderer r;
     SECTION("Initialize") {
         SECTION("with validation") {
-            Renderer r;
             r.Initialize(window, Renderer::ENABLE_VALIDATION);
             REQUIRE(r.IsInitialized());
             REQUIRE(r.GetDebugMessenger());
+
+            r.WaitUntilDeviceIdle();
             REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
         }
 
         SECTION("without validation") {
-            Renderer r;
             r.Initialize(window, Renderer::DISABLE_VALIDATION);
             REQUIRE(r.IsInitialized());
             REQUIRE(!r.GetDebugMessenger());
         }
 
         SECTION("multiple calls throw") {
-            Renderer r;
             r.Initialize(window, Renderer::ENABLE_VALIDATION);
             REQUIRE_THROWS_AS(r.Initialize(window, Renderer::ENABLE_VALIDATION), std::runtime_error);
+
+            r.WaitUntilDeviceIdle();
+            REQUIRE(r.GetDebugMessenger()->GetErrorAndWarningCount() == 0);
         }
     }
+}
+
+TEST_CASE("Renderer") {
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    auto window = glfwCreateWindow(800, 600, "TextureAtlasTest", nullptr, nullptr);
 
     Renderer r;
     r.Initialize(window, Renderer::ENABLE_VALIDATION);

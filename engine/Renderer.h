@@ -15,6 +15,7 @@
 #include "ITexture.h"
 #include "PipelineSprites.h"
 #include "BoundBuffer.h"
+#include "PipelineBloom.h"
 
 class Texture;
 class TextureAtlas;
@@ -137,7 +138,11 @@ protected:
     std::vector<std::vector<VkCommandBuffer>> m_perFrameCommandBuffer;
     VkCommandBuffer m_currentCommandBuffer;
 
+    std::vector<BoundImage> m_frameBufferImages;
+    std::vector<VkImage> m_offscreenBufferImages;
+
     PipelineSprites m_pipelineSprites;
+    PipelineBloom m_pipelineBloom;
 
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;

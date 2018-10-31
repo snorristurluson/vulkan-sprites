@@ -5,11 +5,11 @@
 #include "ShaderLib.h"
 #include <map>
 
-//#define ADD_SHADER(name, filename) \
-//    uint8_t s_##name[] = { \
-//        #include filename \
-//    }; \
-//    Initializer s_##name_init(#name, s_##name, sizeof(s_##name));
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY(x) STRINGIFY_HELPER(x)
+
+#define ADD_SHADER(name) \
+    Initializer name##_init(STRINGIFY(name), name, sizeof(name));
 
 namespace {
     struct ShaderBinary {
@@ -24,32 +24,45 @@ namespace {
         }
     };
 
-    uint8_t s_vertexShader[] = {
-        #include "../engine/shaders/shader.vert.array"
+    uint8_t spriteVertex[] = {
+        #include "shaders/sprite.vert.array"
     };
-    Initializer s("spriteVertex", s_vertexShader, sizeof(s_vertexShader));
+    ADD_SHADER(spriteVertex);
 
-    uint8_t s_pixelShader[] = {
-        #include "../engine/shaders/shader.frag.array"
+    uint8_t spriteFragment[] = {
+        #include "shaders/sprite.frag.array"
     };
+    ADD_SHADER(spriteFragment)
+
+    uint8_t bloomVertex[] = {
+        #include "shaders/bloom.vert.array"
+    };
+    ADD_SHADER(bloomVertex);
+
+    uint8_t bloomFragment[] = {
+        #include "shaders/bloom.frag.array"
+    };
+    ADD_SHADER(bloomFragment)
 }
 
-uint8_t *ShaderLib::GetVertexShader() {
-    return s_vertexShader;
-}
+VkShaderModule CreateShaderModule(VkDevice device, const std::string &name) {
+    auto foundIt = s_shaders.find(name);
+    if(foundIt == s_shaders.end()) {
+        throw std::runtime_error("unrecognized shader");
+    }
 
-size_t ShaderLib::GetVertexShaderSize() {
-    return sizeof(s_vertexShader);
-}
+    auto code = foundIt->second.data;
+    auto codeSize = foundIt->second.size;
 
-uint8_t *ShaderLib::GetPixelShader() {
-    return s_pixelShader;
-}
+    VkShaderModuleCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = codeSize;
+    createInfo.pCode = reinterpret_cast<const uint32_t *>(code);
 
-size_t ShaderLib::GetPixelShaderSize() {
-    return sizeof(s_pixelShader);
-}
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create shader module!");
+    }
 
-VkShaderModule CreateShaderModule(const std::string &name) {
-    return nullptr;
+    return shaderModule;
 }
